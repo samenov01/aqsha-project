@@ -5,6 +5,7 @@ import { useTranslation } from "../i18n";
 import { createOrder } from "../api/orders";
 import { ApiError } from "../api/client";
 import { formatPrice } from "../lib/formatters";
+import { IconStar } from "../components/icons/Icons";
 import type { Service, User } from "../types";
 
 type ServiceDetailsPageProps = {
@@ -115,7 +116,7 @@ export function ServiceDetailsPage({ token, user }: ServiceDetailsPageProps) {
             </div>
             <div className="service-meta">
               <div className="service-rating service-rating-large">
-                <span className="service-rating-star">★</span>
+                <IconStar size={14} className="service-rating-star" />
                 <span>{ratingText}</span>
               </div>
               <span className="service-price">{priceLabel}</span>
@@ -150,7 +151,7 @@ export function ServiceDetailsPage({ token, user }: ServiceDetailsPageProps) {
         <div className="service-action-card">
           <span className="price big">{priceLabel}</span>
           <div className="service-rating service-rating-large">
-            <span className="service-rating-star">★</span>
+            <IconStar size={14} className="service-rating-star" />
             <span>{ratingText}</span>
           </div>
 
@@ -218,7 +219,7 @@ export function ServiceDetailsPage({ token, user }: ServiceDetailsPageProps) {
               <article key={review.id} className="review-card">
                 <div className="review-head">
                   <strong>{review.client.name}</strong>
-                  <span className="review-rating">★ {review.rating}</span>
+                  <span className="review-rating"><IconStar size={12} style={{ verticalAlign: '-1px' }} /> {review.rating}</span>
                 </div>
                 <p className="muted">{review.comment}</p>
               </article>

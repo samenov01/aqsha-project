@@ -7,6 +7,7 @@ import { sendTypingStatus } from "../api/stream";
 import type { AdChatParticipant } from "../api/adChat";
 import { ApiError } from "../api/client";
 import { formatPrice } from "../lib/formatters";
+import { IconX, IconCheck, IconCheckCheck } from "../components/icons/Icons";
 import type { Ad, AdMessage } from "../types";
 import type { User } from "../types";
 
@@ -353,7 +354,7 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
                     aria-label={t("ad_details.chat.close")}
                     style={{marginLeft: isOwner && selectedClientId ? 0 : 'auto'}}
                   >
-                    ✕
+                    <IconX size={18} />
                   </button>
                 </div>
 
@@ -370,7 +371,7 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{formatTime(p.last_message_at)}</span>
                          </div>
                          {p.unread_count > 0 && (
-                           <span style={{ background: 'var(--brand)', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                           <span style={{ background: 'var(--md-primary)', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 'bold' }}>
                              {p.unread_count}
                            </span>
                          )}
@@ -400,7 +401,7 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
                           {msg.message}
                           {isMine && (
                             <div style={{ textAlign: "right", fontSize: "0.75rem", opacity: 0.7, marginTop: "0.2rem" }}>
-                              {msg.isRead ? "✓✓" : "✓"}
+                              {msg.isRead ? <IconCheckCheck size={14} /> : <IconCheck size={14} />}
                             </div>
                           )}
                         </div>
@@ -455,16 +456,16 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
         ) : (
           <div className="ad-chat-wrap">
             <p className="muted" style={{ fontSize: "0.88rem" }}>
-              <Link to="/profile" style={{ color: "var(--brand)", fontWeight: 600 }}>{t("ad_details.chat.auth_login")}</Link>{t("ad_details.chat.auth_prompt")}
+              <Link to="/profile" style={{ color: "var(--md-primary)", fontWeight: 600 }}>{t("ad_details.chat.auth_login")}</Link>{t("ad_details.chat.auth_prompt")}
             </p>
           </div>
         )}
 
-        <div className="hero-actions">
-          <button className={`fav ${favorites.has(ad.id) ? "active" : ""}`} onClick={() => onToggleFavorite(ad.id)}>
+        <div className="hero-actions" style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--md-outline-variant)' }}>
+          <button className={`fav ${favorites.has(ad.id) ? "active" : ""}`} onClick={() => onToggleFavorite(ad.id)} style={{ flex: 1 }}>
             {favorites.has(ad.id) ? t("ad_details.btn.remove_fav") : t("ad_details.btn.add_fav")}
           </button>
-          <Link className="ghost" to="/market">
+          <Link className="ghost" to="/market" style={{ flex: 1, textAlign: 'center' }}>
             {t("ad_details.btn.back_market")}
           </Link>
         </div>

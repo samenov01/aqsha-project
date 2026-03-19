@@ -6,6 +6,7 @@ import { deleteAd, getMyAds, updateAdStatus } from "../api/ads";
 import { login, register, getFaceIdStatus, registerFaceId, loginWithFaceId } from "../api/auth";
 import { ApiError } from "../api/client";
 import { FaceCamera } from "../components/FaceCamera";
+import { IconUser, IconWallet, IconCrown, IconAward, IconStar, IconSprout, IconLogOut, IconSun, IconMoon, IconChevronRight, IconCheckCircle } from "../components/icons/Icons";
 import type { Ad, User } from "../types";
 import { formatPrice } from "../lib/formatters";
 
@@ -185,228 +186,239 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
         />
       )}
 
-      <section className="section-grid">
-        <div>
-          <p className="eyebrow">{t("profile.title")}</p>
-          <h1>{t("profile.auth.title")}</h1>
-        </div>
+      {!user ? (
+        <div className="m3-auth-container">
+          <div className="m3-auth-card">
+            <div className="m3-auth-header">
+              <p className="eyebrow">{t("profile.title")}</p>
+              <h1>{t("profile.auth.title")}</h1>
+            </div>
 
-        {!user ? (
-          <>
-            <div className="tabs">
-              <button className={tab === "login" ? "active" : ""} onClick={() => setTab("login")}>
+            <div className="m3-tabs-segmented">
+              <button 
+                className={tab === "login" ? "active" : ""} 
+                onClick={() => setTab("login")}
+              >
                 {t("profile.tabs.login")}
               </button>
-              <button className={tab === "register" ? "active" : ""} onClick={() => setTab("register")}>
+              <button 
+                className={tab === "register" ? "active" : ""} 
+                onClick={() => setTab("register")}
+              >
                 {t("profile.tabs.register")}
               </button>
             </div>
 
+            {error && <p className="error-box" style={{ margin: 0 }}>{error}</p>}
+            {message && <p className="success-box" style={{ margin: 0 }}>{message}</p>}
+
             {tab === "login" ? (
-              <form className="form-card" onSubmit={handleLogin}>
-                <label className="input-wrap">
-                  <span>{t("profile.email")}</span>
-                  <input required type="email" name="email" />
-                </label>
-                <label className="input-wrap">
-                  <span>{t("profile.password")}</span>
-                  <input required type="password" name="password" minLength={8} />
-                </label>
-                <button className="primary" type="submit">
+              <form className="m3-auth-actions" onSubmit={handleLogin}>
+                <div className="m3-text-field">
+                  <label>{t("profile.email")}</label>
+                  <input required type="email" name="email" placeholder="email@example.com" />
+                </div>
+                <div className="m3-text-field">
+                  <label>{t("profile.password")}</label>
+                  <input required type="password" name="password" minLength={8} placeholder="••••••••" />
+                </div>
+                
+                <button className="primary" type="submit" style={{ marginTop: '0.5rem' }}>
                   {t("profile.login.btn")}
                 </button>
-                <div style={{ textAlign: "center", margin: "0.5rem 0", color: "var(--c-muted)", fontSize: "0.85rem" }}>
+
+                <div style={{ textAlign: "center", color: "var(--md-on-surface-variant)", fontSize: "0.85rem", margin: '0.25rem 0' }}>
                   {t("profile.login.or")}
                 </div>
+
                 <button
-                  className="faceid-btn"
+                  className="m3-faceid-tonal"
                   type="button"
                   onClick={() => setShowCamera("login")}
                 >
-                  <span className="faceid-icon">👤</span>
+                  <IconUser size={20} />
                   {t("profile.login.faceid")}
                 </button>
               </form>
             ) : (
-              <form className="form-card" onSubmit={handleRegister}>
-                <label className="input-wrap">
-                  <span>{t("profile.register.name")}</span>
-                  <input required name="name" minLength={2} />
-                </label>
-                <label className="input-wrap">
-                  <span>{t("profile.email")}</span>
-                  <input required type="email" name="email" />
-                </label>
-                <label className="input-wrap">
-                  <span>{t("profile.password")}</span>
-                  <input required type="password" name="password" minLength={8} />
-                </label>
-                <button className="primary" type="submit">
+              <form className="m3-auth-actions" onSubmit={handleRegister}>
+                <div className="m3-text-field">
+                  <label>{t("profile.register.name")}</label>
+                  <input required name="name" minLength={2} placeholder={t("profile.register.name")} />
+                </div>
+                <div className="m3-text-field">
+                  <label>{t("profile.email")}</label>
+                  <input required type="email" name="email" placeholder="email@example.com" />
+                </div>
+                <div className="m3-text-field">
+                  <label>{t("profile.password")}</label>
+                  <input required type="password" name="password" minLength={8} placeholder="••••••••" />
+                </div>
+                <button className="primary" type="submit" style={{ marginTop: '0.5rem' }}>
                   {t("profile.register.btn")}
                 </button>
               </form>
             )}
-          </>
-        ) : (
-          <div className="profile-card" style={{ position: "relative" }}>
-            <Link 
-              to="/wallet"
-              style={{
-                position: "absolute",
-                top: "1.5rem",
-                right: "1.5rem",
-                background: "var(--bg-soft)",
-                padding: "0.5rem 1rem",
-                borderRadius: "1rem",
-                display: "flex",
+          </div>
+        </div>
+      ) : (
+        <div className="m3-profile-wrap">
+          {error && <p className="error-box" style={{marginBottom: 0}}>{error}</p>}
+          {message && <p className="success-box" style={{marginBottom: 0}}>{message}</p>}
+          
+          {/* 1. M3 Profile Header */}
+          <div className="m3-profile-header">
+            <div className="m3-avatar-large">
+              <IconUser size={48} />
+            </div>
+            <h1 className="m3-profile-name">{user.name}</h1>
+            {user.rank && (
+              <span style={{ 
+                background: user.rank === "Новичок" ? "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)" : 
+                            user.rank === "Опытный" ? "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)" : 
+                            user.rank === "Профессионал" ? "linear-gradient(135deg, #f6d365 0%, #fda085 100%)" :
+                            "linear-gradient(135deg, #ff0844 0%, #ffb199 100%)",
+                color: user.rank === "Новичок" ? "#0D47A1" : user.rank === "Опытный" ? "#4A148C" : user.rank === "Профессионал" ? "#E65100" : "white",
+                padding: "4px 14px", 
+                borderRadius: "var(--md-radius-full)", 
+                fontSize: "0.85rem", 
+                fontWeight: "bold",
+                display: "inline-flex",
                 alignItems: "center",
-                gap: "0.75rem",
-                textDecoration: "none",
-                color: "var(--c-text)",
-                border: "1px solid var(--line)",
-                transition: "all 0.2s ease"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.borderColor = "var(--brand)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.1)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.borderColor = "var(--line)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <span style={{ fontSize: "1.5rem" }}>💳</span>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span style={{ fontSize: "0.75rem", color: "var(--c-muted)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>{t("nav.wallet")}</span>
-                <strong style={{ color: "var(--brand)", fontSize: "1.1rem" }}>{user.balance || 0} ₸</strong>
-              </div>
-            </Link>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.5rem", paddingRight: "10rem" }}>
-              <strong style={{ fontSize: "1.2rem" }}>{user.name}</strong>
-              {user.rank && (
-                <span style={{ 
-                  background: user.rank === "Новичок" ? "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)" : 
-                              user.rank === "Опытный" ? "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)" : 
-                              user.rank === "Профессионал" ? "linear-gradient(135deg, #f6d365 0%, #fda085 100%)" :
-                              "linear-gradient(135deg, #ff0844 0%, #ffb199 100%)",
-                  color: user.rank === "Новичок" ? "#0D47A1" : user.rank === "Опытный" ? "#4A148C" : user.rank === "Профессионал" ? "#E65100" : "white",
-                  padding: "2px 8px", 
-                  borderRadius: "12px", 
-                  fontSize: "0.8rem", 
-                  fontWeight: "bold",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px"
-                }}>
-                  {user.rank === "Мастер" ? "👑" : user.rank === "Профессионал" ? "🌟" : user.rank === "Опытный" ? "⭐" : "🌱"}
-                  {user.rank}
-                </span>
-              )}
-            </div>
-            <p style={{ margin: 0 }}>{user.email}</p>
-            <p className="muted" style={{ margin: "0.25rem 0" }}>{user.university}</p>
-            {user.completedOrders !== undefined && (
-              <p style={{ fontSize: "0.85rem", color: "var(--brand)", fontWeight: 600, marginTop: "0.5rem", marginBottom: "1rem" }}>
-                {t("profile.completed.orders", { count: user.completedOrders })}
-              </p>
+                gap: "6px",
+                margin: "0.25rem 0 0.75rem 0"
+              }}>
+                {user.rank === "Мастер" ? <IconCrown size={16} /> : user.rank === "Профессионал" ? <IconAward size={16} /> : user.rank === "Опытный" ? <IconStar size={16} /> : <IconSprout size={16} />}
+                {user.rank}
+              </span>
             )}
+            <p className="m3-profile-email">{user.email}</p>
+            <p className="m3-profile-uni">{user.university}</p>
+          </div>
 
-            {/* FaceID section */}
-            <div className="faceid-section">
-              <p className="eyebrow" style={{ marginBottom: "0.5rem" }}>{t("profile.faceid.title")}</p>
-              {faceRegistered === null && <p className="muted">{t("profile.faceid.checking")}</p>}
-              {faceRegistered === true && (
-                <>
-                  <p className="success-box" style={{ marginBottom: "0.5rem" }}>
-                    {t("profile.faceid.connected")}
-                  </p>
-                  <button className="ghost small" onClick={() => setShowCamera("register")}>
-                    {t("profile.faceid.re_record")}
-                  </button>
-                </>
-              )}
-              {faceRegistered === false && (
-                <>
-                  <p className="muted" style={{ marginBottom: "0.5rem" }}>
-                    {t("profile.faceid.connect_prompt")}
-                  </p>
-                  <button
-                    className="faceid-btn"
-                    onClick={() => setShowCamera("register")}
-                  >
-                    <span className="faceid-icon">👤</span>
-                    {t("profile.faceid.connect_btn")}
-                  </button>
-                </>
-              )}
-            </div>
+          {/* 2. M3 Stat Grid */}
+          <div className="m3-stat-grid">
+            <Link to="/wallet" className="m3-stat-card">
+              <div className="m3-stat-icon">
+                <IconWallet size={24} />
+              </div>
+              <span className="label">{t("nav.wallet")}</span>
+              <span className="value m3-text-primary">{user.balance || 0} ₸</span>
+            </Link>
+            
+            {(user.completedOrders !== undefined) && (
+              <div className="m3-stat-card">
+                <div className="m3-stat-icon" style={{ background: "var(--md-surface-variant)", color: "var(--md-on-surface-variant)" }}>
+                  <IconCheckCircle size={24} />
+                </div>
+                <span className="label">{t("profile.completed.orders").split(" ")[0]}</span>
+                <span className="value">{user.completedOrders}</span>
+              </div>
+            )}
+          </div>
 
-            <div className="theme-toggle-section" style={{ marginTop: "1rem", marginBottom: "1rem" }}>
-              <p className="eyebrow" style={{ marginBottom: "0.5rem" }}>{t("theme.appearance")}</p>
-              <button 
-                className="ghost" 
-                onClick={toggleTheme}
-                style={{ width: "100%", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem" }}
-              >
-                <span>{theme === "light" ? t("theme.light") : t("theme.dark")}</span>
-                <span style={{ fontSize: "0.85rem", color: "var(--brand)" }}>{t("theme.change")}</span>
-              </button>
-            </div>
+          {/* 3. M3 Settings List Card */}
+          <div className="m3-list-card">
+            {/* FaceID */}
+            <button 
+              className="m3-list-item" 
+              onClick={() => setShowCamera("register")}
+              type="button"
+            >
+              <div className="m3-list-item-icon">
+                <IconUser size={20} />
+              </div>
+              <div className="m3-list-item-content">
+                <span className="m3-list-item-title">{t("profile.faceid.title")}</span>
+                <span className="m3-list-item-subtitle" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {faceRegistered && <IconCheckCircle size={14} style={{ color: 'var(--md-primary)' }} />}
+                  {faceRegistered === null ? t("profile.faceid.checking") : 
+                   faceRegistered ? t("profile.faceid.connected") : t("profile.faceid.connect_prompt")}
+                </span>
+              </div>
+              <div className={`m3-list-item-action ${faceRegistered ? "success" : ""}`}>
+                {faceRegistered ? t("profile.faceid.re_record") : t("profile.faceid.connect_btn")}
+              </div>
+            </button>
 
-            <button className="ghost" onClick={onLogout}>
-              {t("profile.logout")}
+            {/* Theme Toggle */}
+            <button 
+              className="m3-list-item"
+              onClick={toggleTheme}
+              type="button"
+            >
+              <div className="m3-list-item-icon">
+                {theme === "light" ? <IconSun size={20} /> : <IconMoon size={20} />}
+              </div>
+              <div className="m3-list-item-content">
+                <span className="m3-list-item-title">{t("theme.appearance")}</span>
+                <span className="m3-list-item-subtitle">
+                  {theme === "light" ? t("theme.light") : t("theme.dark")}
+                </span>
+              </div>
+              <div className="m3-list-item-action">
+                {t("theme.change")} <IconChevronRight size={18} style={{marginLeft: "4px"}} />
+              </div>
+            </button>
+
+            {/* Logout */}
+            <button 
+              className="m3-list-item danger"
+              onClick={onLogout}
+              type="button"
+            >
+              <div className="m3-list-item-icon">
+                <IconLogOut size={20} />
+              </div>
+              <div className="m3-list-item-content">
+                <span className="m3-list-item-title">{t("profile.logout")}</span>
+              </div>
             </button>
           </div>
-        )}
 
-        {error && <p className="error-box">{error}</p>}
-        {message && <p className="success-box">{message}</p>}
-      </section>
-
-      <section className="section-grid">
-        <div className="section-head-row">
-          <div>
-            <p className="eyebrow">{t("profile.ads.eyebrow")}</p>
-            <h2>{t("profile.ads.title")}</h2>
-          </div>
-        </div>
-
-        {isLoadingAds && <p className="muted">{t("common.loading")}</p>}
-
-        {!isLoadingAds && myAds.length === 0 && <p className="muted">{t("profile.ads.empty")}</p>}
-
-        <div className="my-ads-grid">
-          {myAds.map((ad) => (
-            <article key={ad.id} className="small-ad-card">
-              <h3>{ad.title}</h3>
-              <p className="muted">{ad.category}</p>
-              <p className="price">{formatPrice(ad.price)}</p>
-              <div className="status-row">
-                <span className={`status-chip status-${ad.status || "active"}`}>
-                  {ad.status === "sold" ? t("profile.ads.status.sold") : ad.status === "archived" ? t("profile.ads.status.archived.chip") : t("profile.ads.status.active")}
-                </span>
+          {/* 4. My Ads Section */}
+          <section style={{ marginTop: "1rem" }}>
+            <div className="section-head-row">
+              <div>
+                <p className="eyebrow">{t("profile.ads.eyebrow")}</p>
+                <h2>{t("profile.ads.title")}</h2>
               </div>
-              <label className="input-wrap">
-                <span>{t("profile.ads.status")}</span>
-                <select
-                  value={ad.status || "active"}
-                  onChange={(event) => handleStatusChange(ad.id, event.target.value as "active" | "archived" | "sold")}
-                >
-                  <option value="active">{t("profile.ads.status.active")}</option>
-                  <option value="sold">{t("profile.ads.status.sold")}</option>
-                  <option value="archived">{t("profile.ads.status.archived")}</option>
-                </select>
-              </label>
-              <button className="ghost small" onClick={() => handleDelete(ad.id)}>
-                {t("common.delete")}
-              </button>
-            </article>
-          ))}
+            </div>
+
+            {isLoadingAds && <p className="muted">{t("common.loading")}</p>}
+            {!isLoadingAds && myAds.length === 0 && <p className="muted">{t("profile.ads.empty")}</p>}
+
+            <div className="my-ads-grid">
+              {myAds.map((ad) => (
+                <article key={ad.id} className="small-ad-card">
+                  <h3>{ad.title}</h3>
+                  <p className="muted">{ad.category}</p>
+                  <p className="price">{formatPrice(ad.price)}</p>
+                  <div className="status-row">
+                    <span className={`status-chip status-${ad.status || "active"}`}>
+                      {ad.status === "sold" ? t("profile.ads.status.sold") : ad.status === "archived" ? t("profile.ads.status.archived.chip") : t("profile.ads.status.active")}
+                    </span>
+                  </div>
+                  <label className="input-wrap">
+                    <span>{t("profile.ads.status")}</span>
+                    <select
+                      value={ad.status || "active"}
+                      onChange={(event) => handleStatusChange(ad.id, event.target.value as "active" | "archived" | "sold")}
+                    >
+                      <option value="active">{t("profile.ads.status.active")}</option>
+                      <option value="sold">{t("profile.ads.status.sold")}</option>
+                      <option value="archived">{t("profile.ads.status.archived")}</option>
+                    </select>
+                  </label>
+                  <button className="ghost small" onClick={() => handleDelete(ad.id)}>
+                    {t("common.delete")}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
+      )}
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
 import { approveAdminOrder } from "../api/admin";
 import { sendTypingStatus } from "../api/stream";
 import { ApiError } from "../api/client";
+import { IconCheck, IconCheckCheck, IconCheckCircle } from "../components/icons/Icons";
 import type { ServiceMessage, ServiceOrder, User } from "../types";
 import { formatPrice } from "../lib/formatters";
 
@@ -338,8 +339,8 @@ export function OrderDetailsPage({ token, user }: OrderDetailsPageProps) {
         )}
 
         {user?.isAdmin && order.status === "under_review" && (
-          <div className="admin-actions" style={{ background: "var(--bg-soft)", padding: "1rem", borderRadius: "12px", border: "1px dashed var(--brand)", marginTop: "1rem" }}>
-            <p className="eyebrow" style={{ color: "var(--brand)" }}>{t("order.admin.action")}</p>
+          <div className="admin-actions" style={{ background: "var(--md-surface-container)", padding: "1rem", borderRadius: "12px", border: "1px dashed var(--md-primary)", marginTop: "1rem" }}>
+            <p className="eyebrow" style={{ color: "var(--md-primary)" }}>{t("order.admin.action")}</p>
             <p style={{ marginBottom: "1rem" }}>{t("order.admin.desc")}</p>
             <button className="primary" onClick={handleAdminApprove} disabled={isUpdating}>
               {isUpdating ? t("order.admin.approving") : t("order.admin.approve")}
@@ -356,9 +357,9 @@ export function OrderDetailsPage({ token, user }: OrderDetailsPageProps) {
         )}
 
         {order.role === "client" && order.paymentStatus === "paid" && order.status !== "completed" && (
-          <div style={{ marginTop: "1rem", background: "var(--bg-soft)", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)" }}>
+          <div style={{ marginTop: "1rem", background: "var(--md-surface-container)", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)" }}>
             <p className="muted" style={{ display: "flex", gap: "0.5rem", alignItems: "center", margin: 0 }}>
-              <span style={{ color: "var(--brand)" }}>✓</span> {t("order.msg.paid")}
+              <IconCheckCircle size={16} style={{ color: "var(--md-primary)" }} /> {t("order.msg.paid")}
             </p>
           </div>
         )}
@@ -392,7 +393,7 @@ export function OrderDetailsPage({ token, user }: OrderDetailsPageProps) {
                     <p>{message.message}</p>
                     {isOwn && (
                       <div style={{ textAlign: "right", fontSize: "0.75rem", opacity: 0.7, marginTop: "0.2rem" }}>
-                        {message.isRead ? "✓✓" : "✓"}
+                        {message.isRead ? <IconCheckCheck size={14} /> : <IconCheck size={14} />}
                       </div>
                     )}
                   </div>
@@ -409,7 +410,7 @@ export function OrderDetailsPage({ token, user }: OrderDetailsPageProps) {
 
         <div className="chat-input" style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
           <input
-            style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--line)", background: "var(--bg-light)" }}
+            style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--md-outline-variant)", background: "var(--bg-light)" }}
             value={messageText}
             onChange={(event) => handleMessageInput(event.target.value)}
             placeholder={t("order.chat.placeholder")}

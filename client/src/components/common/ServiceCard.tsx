@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../../i18n";
+import { IconStar } from "../icons/Icons";
 import type { Service } from "../../types";
 type ServiceCardProps = {
   service: Service;
@@ -47,7 +48,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
         </div>
         <div className="service-meta">
           <div className="service-rating">
-            <span className="service-rating-star">★</span>
+            <IconStar size={14} className="service-rating-star" />
             <span>{ratingText}</span>
           </div>
         </div>

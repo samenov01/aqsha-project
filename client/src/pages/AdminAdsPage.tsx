@@ -190,9 +190,9 @@ export function AdminAdsPage({ token, user }: AdminAdsPageProps) {
 
   return (
     <section className="section-grid">
-      <div>
+      <div style={{ marginBottom: "2rem" }}>
         <p className="eyebrow">{t("admin.eyebrow")}</p>
-        <h1>{t("admin.title")}</h1>
+        <h1 style={{ marginBottom: "0.5rem" }}>{t("admin.title")}</h1>
       </div>
 
       {isLoading && <p className="muted">{t("admin.loading")}</p>}
@@ -202,25 +202,25 @@ export function AdminAdsPage({ token, user }: AdminAdsPageProps) {
       {!isLoading && activeTab === "services" && services.length === 0 && <p className="muted">{t("admin.empty.services")}</p>}
       {!isLoading && activeTab === "chats" && chats.length === 0 && <p className="muted">{t("admin.empty.chats")}</p>}
 
-      <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem" }}>
+      <div style={{ marginBottom: "2rem", display: "flex", gap: "1rem", flexWrap: "wrap" }}>
         <button
           className={`ghost ${activeTab === "ads" ? "active" : ""}`}
           onClick={() => { setActiveTab("ads"); setSelectedChat(null); }}
-          style={{ borderColor: activeTab === "ads" ? "var(--brand)" : "var(--line)" }}
+          style={{ borderColor: activeTab === "ads" ? "var(--md-primary)" : "var(--md-outline-variant)" }}
         >
           {t("admin.tab.ads")}
         </button>
         <button
           className={`ghost ${activeTab === "services" ? "active" : ""}`}
           onClick={() => { setActiveTab("services"); setSelectedChat(null); }}
-          style={{ borderColor: activeTab === "services" ? "var(--brand)" : "var(--line)" }}
+          style={{ borderColor: activeTab === "services" ? "var(--md-primary)" : "var(--md-outline-variant)" }}
         >
           {t("admin.tab.services")}
         </button>
         <button
           className={`ghost ${activeTab === "chats" ? "active" : ""}`}
           onClick={() => { setActiveTab("chats"); setSelectedChat(null); }}
-          style={{ borderColor: activeTab === "chats" ? "var(--brand)" : "var(--line)" }}
+          style={{ borderColor: activeTab === "chats" ? "var(--md-primary)" : "var(--md-outline-variant)" }}
         >
           {t("admin.tab.chats", { count: chats.length.toString() })}
         </button>
@@ -327,7 +327,7 @@ export function AdminAdsPage({ token, user }: AdminAdsPageProps) {
       )}
 
       {activeTab === "chats" && selectedChat && (
-        <div className="admin-chat-viewer" style={{ background: "white", padding: "1.5rem", borderRadius: "14px", border: "1px solid var(--line)", marginTop: "1rem" }}>
+        <div className="admin-chat-viewer" style={{ background: "var(--md-surface)", padding: "2rem", borderRadius: "var(--md-radius-xl)", border: "1px solid var(--md-outline-variant)", marginTop: "1rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
             <div>
               <h2 style={{ fontSize: "1.3rem", marginBottom: "0.5rem" }}>{t("admin.chat.title", { title: selectedChat.adTitle })}</h2>
@@ -336,16 +336,16 @@ export function AdminAdsPage({ token, user }: AdminAdsPageProps) {
             <button className="ghost" onClick={() => setSelectedChat(null)}>{t("admin.btn.back_to_list")}</button>
           </div>
 
-          <div style={{ background: "var(--bg-soft)", padding: "1rem", borderRadius: "12px", height: "400px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.8rem", border: "1px solid var(--line)" }}>
+          <div style={{ background: "var(--md-surface-container)", padding: "1rem", borderRadius: "12px", height: "400px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.8rem", border: "1px solid var(--md-outline-variant)" }}>
             {selectedChat.messages.length === 0 ? (
               <p className="muted">{t("admin.chat.empty")}</p>
             ) : (
               selectedChat.messages.map((msg: any) => (
                 <div key={msg.id} style={{ alignSelf: msg.senderId === selectedChat.ownerId ? "flex-end" : "flex-start", maxWidth: "80%" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-soft)", marginBottom: "3px", textAlign: msg.senderId === selectedChat.ownerId ? "right" : "left" }}>
+                  <div style={{ fontSize: "0.75rem", color: "var(--md-on-surface-variant)", marginBottom: "3px", textAlign: msg.senderId === selectedChat.ownerId ? "right" : "left" }}>
                     {msg.senderName} {msg.senderId === selectedChat.ownerId && t("admin.chat.author")}
                   </div>
-                  <div style={{ background: msg.senderId === selectedChat.ownerId ? "var(--brand)" : "white", color: msg.senderId === selectedChat.ownerId ? "white" : "var(--text)", padding: "0.6rem 0.9rem", borderRadius: "12px", border: msg.senderId === selectedChat.ownerId ? "none" : "1px solid var(--line)" }}>
+                  <div style={{ background: msg.senderId === selectedChat.ownerId ? "var(--md-primary)" : "white", color: msg.senderId === selectedChat.ownerId ? "white" : "var(--md-on-surface)", padding: "0.6rem 0.9rem", borderRadius: "12px", border: msg.senderId === selectedChat.ownerId ? "none" : "1px solid var(--md-outline-variant)" }}>
                     {msg.message}
                   </div>
                 </div>
@@ -368,10 +368,10 @@ export function AdminAdsPage({ token, user }: AdminAdsPageProps) {
                   display: "flex",
                   flexDirection: "column",
                   gap: "0.5rem",
-                  padding: "1.5rem",
-                  background: "white",
-                  borderRadius: "12px",
-                  border: "1px solid var(--line)"
+                  padding: "2rem",
+                  background: "var(--md-surface)",
+                  borderRadius: "var(--md-radius-lg)",
+                  border: "1px solid var(--md-outline-variant)"
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -384,7 +384,7 @@ export function AdminAdsPage({ token, user }: AdminAdsPageProps) {
                       <span className={`status-chip status-${order.status}`}>
                         {order.status === "under_review" ? t("admin.order.status.under_review") : order.status === "completed" ? t("admin.order.status.completed") : order.status === "pending" ? t("admin.order.status.pending") : order.status === "accepted" ? t("admin.order.status.accepted") : order.status}
                       </span>
-                      <strong style={{ color: "var(--brand)" }}>{formatPrice(order.price)}</strong>
+                      <strong style={{ color: "var(--md-primary)" }}>{formatPrice(order.price)}</strong>
                     </div>
                   </div>
                   <div>

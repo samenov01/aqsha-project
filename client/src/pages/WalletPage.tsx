@@ -86,18 +86,18 @@ export function WalletPage({ token, user, updateUser }: WalletPageProps) {
       {!loading && data && (
         <>
           <div style={{
-            background: "linear-gradient(135deg, var(--brand), #0066cc)",
-            color: "white",
+            background: "linear-gradient(135deg, var(--md-primary), var(--md-secondary))",
+            color: "var(--md-on-primary)",
             padding: "2rem",
-            borderRadius: "16px",
+            borderRadius: "var(--md-radius-xl)",
             marginBottom: "2rem",
-            boxShadow: "0 10px 30px rgba(0, 114, 255, 0.2)"
+            boxShadow: "var(--md-shadow)"
           }}>
             <p style={{ opacity: 0.8, marginBottom: "0.5rem" }}>{t("wallet.balance")}</p>
             <h2 style={{ fontSize: "2.5rem", margin: 0 }}>{formatPrice(data.balance)}</h2>
           </div>
 
-          <form onSubmit={handleTopup} style={{ display: "flex", gap: "1rem", marginBottom: "3rem", background: "var(--bg-soft)", padding: "1.5rem", borderRadius: "12px" }}>
+          <form onSubmit={handleTopup} style={{ display: "flex", gap: "1rem", marginBottom: "3rem", background: "var(--md-surface-container)", padding: "1.5rem", borderRadius: "var(--md-radius-lg)" }}>
             <div style={{ flex: 1 }}>
               <label>{t("wallet.topup.label")}</label>
               <input 
@@ -122,7 +122,7 @@ export function WalletPage({ token, user, updateUser }: WalletPageProps) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "1rem" }}>
               {data.transactions.map((t) => (
-                <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "white", border: "1px solid var(--line)", borderRadius: "12px" }}>
+                <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "var(--md-surface)", border: "1px solid var(--md-outline-variant)", borderRadius: "var(--md-radius-lg)" }}>
                   <div>
                     <p style={{ fontWeight: 600, marginBottom: "4px" }}>{t.description}</p>
                     <p className="muted" style={{ fontSize: "0.85rem" }}>{new Date(t.createdAt).toLocaleString("ru-KZ")}</p>
@@ -130,7 +130,7 @@ export function WalletPage({ token, user, updateUser }: WalletPageProps) {
                   <div style={{ 
                     fontWeight: "bold", 
                     fontSize: "1.1rem",
-                    color: t.type === "income" ? "#10b981" : "var(--text)"
+                    color: t.type === "income" ? "var(--md-primary)" : "var(--md-on-surface)"
                   }}>
                     {t.type === "income" ? "+" : "-"}{formatPrice(t.amount)}
                   </div>

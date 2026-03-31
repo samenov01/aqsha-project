@@ -11,6 +11,10 @@ const { notificationsRouter } = require("./routes/notifications-routes");
 const { adminRouter } = require("./routes/admin-routes");
 const { streamRouter } = require("./routes/stream-routes");
 const { walletRouter } = require("./routes/wallet-routes");
+const { reportsRouter } = require("./routes/reports-routes");
+const { favoritesRouter } = require("./routes/favorites-routes");
+const { profileRouter } = require("./routes/profile-routes");
+const { newsRouter } = require("./routes/news-routes");
 const { errorHandler, notFoundHandler } = require("./middleware/error-handler");
 const {
   apiLimiter,
@@ -52,6 +56,10 @@ function createApp() {
   app.use("/api", adminRouter);
   app.use("/api", streamRouter);
   app.use(walletRouter);
+  app.use("/api", reportsRouter);
+  app.use("/api", favoritesRouter);
+  app.use("/api", profileRouter);
+  app.use("/api", newsRouter);
 
   if (fs.existsSync(CLIENT_DIST)) {
     app.use(express.static(CLIENT_DIST));

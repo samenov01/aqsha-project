@@ -5,17 +5,27 @@ const { badRequest, forbidden, notFound } = require("../lib/http-error");
 const { parsePositiveInt, requireText } = require("../lib/validators");
 const { authMiddleware } = require("../middleware/auth");
 const { createNotification } = require("../lib/notifications");
+const { checkAndAwardBadges } = require("../lib/badges");
 const { sendEventToUser } = require("./stream-routes");
 
 const ordersRouter = Router();
 
 function toOrderDto(row, currentUserId) {
-  const review =
-    row.review_rating !== null && row.review_rating !== undefined
+  const clientReview =
+    row.client_review_rating !== null && row.client_review_rating !== undefined
       ? {
-          rating: row.review_rating,
-          comment: row.review_comment || "",
-          createdAt: row.review_created_at,
+          rating: row.client_review_rating,
+          comment: row.client_review_comment || "",
+          createdAt: row.client_review_created_at,
+        }
+      : null;
+
+  const providerReview =
+    row.provider_review_rating !== null && row.provider_review_rating !== undefined
+      ? {
+          rating: row.provider_review_rating,
+          comment: row.provider_review_comment || "",
+          createdAt: row.provider_review_created_at,
         }
       : null;
 
@@ -41,21 +51,27 @@ function toOrderDto(row, currentUserId) {
       id: row.provider_id,
       name: row.provider_name,
     },
-    review,
+    // backwards compat — client's review of provider
+    review: clientReview,
+    clientReview,
+    providerReview,
   };
 }
 
 async function getOrderWithAccess(orderId, userId, isAdmin = false) {
   const row = await get(
     `
-      SELECT service_orders.*, services.title as service_title, services.category as service_category, services.price as service_price,
+      SELECT service_orders.*,
+             services.title as service_title, services.category as service_category, services.price as service_price,
              client.name as client_name, provider.name as provider_name,
-             reviews.rating as review_rating, reviews.comment as review_comment, reviews.created_at as review_created_at
+             cr.rating as client_review_rating, cr.comment as client_review_comment, cr.created_at as client_review_created_at,
+             pr.rating as provider_review_rating, pr.comment as provider_review_comment, pr.created_at as provider_review_created_at
       FROM service_orders
       JOIN services ON services.id = service_orders.service_id
       JOIN users client ON client.id = service_orders.client_id
       JOIN users provider ON provider.id = service_orders.provider_id
-      LEFT JOIN service_reviews reviews ON reviews.order_id = service_orders.id
+      LEFT JOIN service_reviews cr ON cr.order_id = service_orders.id AND cr.reviewer_type = 'client'
+      LEFT JOIN service_reviews pr ON pr.order_id = service_orders.id AND pr.reviewer_type = 'provider'
       WHERE service_orders.id = ?
     `,
     [orderId]
@@ -121,14 +137,17 @@ ordersRouter.get(
   asyncHandler(async (req, res) => {
     const rows = await all(
       `
-        SELECT service_orders.*, services.title as service_title, services.category as service_category, services.price as service_price,
+        SELECT service_orders.*,
+               services.title as service_title, services.category as service_category, services.price as service_price,
                client.name as client_name, provider.name as provider_name,
-               reviews.rating as review_rating, reviews.comment as review_comment, reviews.created_at as review_created_at
+               cr.rating as client_review_rating, cr.comment as client_review_comment, cr.created_at as client_review_created_at,
+               pr.rating as provider_review_rating, pr.comment as provider_review_comment, pr.created_at as provider_review_created_at
         FROM service_orders
         JOIN services ON services.id = service_orders.service_id
         JOIN users client ON client.id = service_orders.client_id
         JOIN users provider ON provider.id = service_orders.provider_id
-        LEFT JOIN service_reviews reviews ON reviews.order_id = service_orders.id
+        LEFT JOIN service_reviews cr ON cr.order_id = service_orders.id AND cr.reviewer_type = 'client'
+        LEFT JOIN service_reviews pr ON pr.order_id = service_orders.id AND pr.reviewer_type = 'provider'
         WHERE service_orders.client_id = ? OR service_orders.provider_id = ?
         ORDER BY service_orders.created_at DESC
       `,
@@ -369,19 +388,21 @@ ordersRouter.post(
   asyncHandler(async (req, res) => {
     const orderId = parsePositiveInt(req.params.id, "id");
     const row = await getOrderWithAccess(orderId, req.user.id, req.user.isAdmin);
-    if (!row) {
-      throw notFound("Заказ не найден");
-    }
-    if (row === "forbidden") {
-      throw forbidden("Нет доступа к заказу");
-    }
-
-    if (row.client_id !== req.user.id) {
-      throw forbidden("Оставить отзыв может только клиент");
-    }
+    if (!row) throw notFound("Заказ не найден");
+    if (row === "forbidden") throw forbidden("Нет доступа к заказу");
 
     if (row.status !== "completed") {
       throw badRequest("Оценку можно оставить только после завершения заказа");
+    }
+
+    // Determine who is reviewing
+    let reviewerType;
+    if (row.client_id === req.user.id) {
+      reviewerType = "client";
+    } else if (row.provider_id === req.user.id) {
+      reviewerType = "provider";
+    } else {
+      throw forbidden("Вы не участник этого заказа");
     }
 
     const rating = parsePositiveInt(req.body.rating, "rating");
@@ -391,25 +412,30 @@ ordersRouter.post(
 
     const comment = requireText(req.body.comment || "Спасибо!", "Комментарий", { min: 1, max: 400 });
 
-    const existing = await get("SELECT id FROM service_reviews WHERE order_id = ?", [orderId]);
-    if (existing) {
-      throw badRequest("Отзыв уже оставлен");
-    }
+    const existing = await get(
+      "SELECT id FROM service_reviews WHERE order_id = ? AND reviewer_type = ?",
+      [orderId, reviewerType]
+    );
+    if (existing) throw badRequest("Отзыв уже оставлен");
 
     await run(
-      `
-        INSERT INTO service_reviews (order_id, service_id, client_id, provider_id, rating, comment)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `,
-      [orderId, row.service_id, row.client_id, row.provider_id, rating, comment]
+      `INSERT INTO service_reviews (order_id, service_id, client_id, provider_id, reviewer_type, rating, comment)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [orderId, row.service_id, row.client_id, row.provider_id, reviewerType, rating, comment]
     );
 
+    const notifyUserId = reviewerType === "client" ? row.provider_id : row.client_id;
     await createNotification(
-      row.provider_id,
+      notifyUserId,
       "review",
       "Новый отзыв",
-      `Клиент оставил отзыв по заказу #${orderId}.`
+      `${reviewerType === "client" ? "Клиент" : "Исполнитель"} оставил отзыв по заказу #${orderId}.`
     );
+
+    // Award badges to provider after client review
+    if (reviewerType === "client") {
+      checkAndAwardBadges(row.provider_id).catch(() => {});
+    }
 
     res.status(201).json({ ok: true });
   })

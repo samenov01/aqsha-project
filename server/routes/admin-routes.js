@@ -439,10 +439,9 @@ adminRouter.post(
   "/admin/orders/:id/approve",
   asyncHandler(async (req, res) => {
     const orderId = parsePositiveInt(req.params.id, "id");
-    
-    // Get order details
+
     const order = await get(
-      `SELECT o.id, o.status, o.provider_id, s.price 
+      `SELECT o.id, o.status, o.provider_id, s.price
        FROM service_orders o
        JOIN services s ON s.id = o.service_id
        WHERE o.id = ?`,
@@ -452,30 +451,48 @@ adminRouter.post(
     if (!order) throw notFound("Заказ не найден");
     if (order.status !== "under_review") throw badRequest("Заказ не находится на проверке");
 
-    // 1. Mark complete
-    await run("UPDATE service_orders SET status = 'completed' WHERE id = ?", [order.id]);
-    
-    // 2. Add balance to provider
+    const { createNotification } = require("../lib/notifications");
+    const { checkAndAwardBadges } = require("../lib/badges");
+
+    const COMMISSION_RATE = 0.10; // 10%
     const price = Number(order.price) || 0;
-    if (price > 0) {
-      await run("UPDATE users SET balance = balance + ? WHERE id = ?", [price, order.provider_id]);
+    const commissionAmount = Math.round(price * COMMISSION_RATE);
+    const providerAmount = price - commissionAmount;
+
+    // 1. Mark complete + record commission
+    await run(
+      "UPDATE service_orders SET status = 'completed', commission_amount = ? WHERE id = ?",
+      [commissionAmount, order.id]
+    );
+
+    // 2. Credit provider (after commission)
+    if (providerAmount > 0) {
+      await run("UPDATE users SET balance = balance + ? WHERE id = ?", [providerAmount, order.provider_id]);
       await run(
         "INSERT INTO transactions (user_id, amount, type, description) VALUES (?, ?, 'income', ?)",
-        [order.provider_id, price, `Оплата за заказ #${order.id}`]
+        [
+          order.provider_id,
+          providerAmount,
+          commissionAmount > 0
+            ? `Оплата за заказ #${order.id} (комиссия ${commissionAmount} ₸)`
+            : `Оплата за заказ #${order.id}`,
+        ]
       );
     }
 
     // 3. Notify provider
-    const { createNotification } = require("./notifications-routes");
     await createNotification(
       order.provider_id,
       "order",
       "Оплата зачислена!",
-      `Администратор одобрил заказ #${order.id}. На ваш кошелек зачислено ${price} ₸.`,
+      `Заказ #${order.id} одобрен. Зачислено ${providerAmount} ₸${commissionAmount > 0 ? ` (комиссия платформы ${commissionAmount} ₸)` : ""}.`,
       `/wallet`
     );
 
-    res.json({ ok: true });
+    // 4. Award badges
+    checkAndAwardBadges(order.provider_id).catch(() => {});
+
+    res.json({ ok: true, providerAmount, commissionAmount });
   })
 );
 

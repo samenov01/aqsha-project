@@ -294,6 +294,103 @@ async function initDb() {
     )`
   );
 
+  // ── Reports (жалобы) ──────────────────────────────────────────────────
+  await run(
+    `CREATE TABLE IF NOT EXISTS reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      reporter_id INTEGER NOT NULL,
+      target_type TEXT NOT NULL CHECK (target_type IN ('ad', 'service', 'user')),
+      target_id INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      comment TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'dismissed')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(reporter_id) REFERENCES users(id) ON DELETE CASCADE
+    )`
+  );
+
+  // ── Favorites (избранное) ─────────────────────────────────────────────
+  await run(
+    `CREATE TABLE IF NOT EXISTS favorites (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      ad_id INTEGER,
+      service_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY(ad_id) REFERENCES ads(id) ON DELETE CASCADE,
+      FOREIGN KEY(service_id) REFERENCES services(id) ON DELETE CASCADE
+    )`
+  );
+
+  // ── User badges (достижения) ──────────────────────────────────────────
+  await run(
+    `CREATE TABLE IF NOT EXISTS user_badges (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      badge TEXT NOT NULL,
+      earned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, badge)
+    )`
+  );
+
+  // ── News cache (кэш новостей) ─────────────────────────────────────────
+  await run(
+    `CREATE TABLE IF NOT EXISTS news_cache (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      url TEXT NOT NULL,
+      image_url TEXT DEFAULT '',
+      published_at TEXT DEFAULT '',
+      fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  );
+
+  // ── Migrate service_reviews to support two-way reviews ────────────────
+  const reviewsInfo = await get(
+    "SELECT sql FROM sqlite_master WHERE type='table' AND name='service_reviews'"
+  );
+  if (reviewsInfo && !reviewsInfo.sql.includes("reviewer_type")) {
+    await run("PRAGMA foreign_keys=OFF;");
+    await run(
+      `CREATE TABLE IF NOT EXISTS service_reviews_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        service_id INTEGER NOT NULL,
+        client_id INTEGER NOT NULL,
+        provider_id INTEGER NOT NULL,
+        reviewer_type TEXT NOT NULL DEFAULT 'client' CHECK (reviewer_type IN ('client', 'provider')),
+        rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+        comment TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(order_id, reviewer_type),
+        FOREIGN KEY(order_id) REFERENCES service_orders(id) ON DELETE CASCADE,
+        FOREIGN KEY(service_id) REFERENCES services(id) ON DELETE CASCADE,
+        FOREIGN KEY(client_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY(provider_id) REFERENCES users(id) ON DELETE CASCADE
+      )`
+    );
+    await run(
+      `INSERT INTO service_reviews_new
+         (id, order_id, service_id, client_id, provider_id, reviewer_type, rating, comment, created_at)
+       SELECT id, order_id, service_id, client_id, provider_id, 'client', rating, comment, created_at
+       FROM service_reviews`
+    );
+    await run("DROP TABLE service_reviews");
+    await run("ALTER TABLE service_reviews_new RENAME TO service_reviews");
+    await run("PRAGMA foreign_keys=ON;");
+  }
+
+  // ── Add commission_amount to service_orders ───────────────────────────
+  try {
+    await run(
+      "ALTER TABLE service_orders ADD COLUMN commission_amount INTEGER NOT NULL DEFAULT 0"
+    );
+  } catch (_error) {
+    // Column already exists.
+  }
+
   await run("CREATE INDEX IF NOT EXISTS idx_ads_created_at ON ads(created_at DESC)");
   await run("CREATE INDEX IF NOT EXISTS idx_ads_user_id ON ads(user_id)");
   await run("CREATE INDEX IF NOT EXISTS idx_ads_status ON ads(status)");

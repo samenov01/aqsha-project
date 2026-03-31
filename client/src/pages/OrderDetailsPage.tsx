@@ -422,21 +422,22 @@ export function OrderDetailsPage({ token, user }: OrderDetailsPageProps) {
         </div>
       </section>
 
-      {order.status === "completed" && order.role === "client" && !order.review && (
+      {/* Review form — client reviews provider */}
+      {order.status === "completed" && order.role === "client" && !order.clientReview && (
         <section className="section-grid">
           <div>
             <p className="eyebrow">{t("order.review.eyebrow")}</p>
-            <h2>{t("order.review.title")}</h2>
+            <h2>Оценить исполнителя</h2>
           </div>
           <form className="form-card" onSubmit={handleReviewSubmit}>
             <label className="input-wrap">
               <span>{t("order.review.rating")}</span>
               <select value={rating} onChange={(event) => setRating(event.target.value)}>
-                <option value="5">5</option>
-                <option value="4">4</option>
-                <option value="3">3</option>
-                <option value="2">2</option>
-                <option value="1">1</option>
+                <option value="5">5 — Отлично</option>
+                <option value="4">4 — Хорошо</option>
+                <option value="3">3 — Нормально</option>
+                <option value="2">2 — Плохо</option>
+                <option value="1">1 — Ужасно</option>
               </select>
             </label>
             <label className="input-wrap">
@@ -455,17 +456,67 @@ export function OrderDetailsPage({ token, user }: OrderDetailsPageProps) {
         </section>
       )}
 
-      {order.review && (
+      {/* Review form — provider reviews client */}
+      {order.status === "completed" && order.role === "provider" && !order.providerReview && (
+        <section className="section-grid">
+          <div>
+            <p className="eyebrow">Двусторонний отзыв</p>
+            <h2>Оценить заказчика</h2>
+          </div>
+          <form className="form-card" onSubmit={handleReviewSubmit}>
+            <label className="input-wrap">
+              <span>Оценка заказчика</span>
+              <select value={rating} onChange={(event) => setRating(event.target.value)}>
+                <option value="5">5 — Отличный заказчик</option>
+                <option value="4">4 — Хороший заказчик</option>
+                <option value="3">3 — Нормальный заказчик</option>
+                <option value="2">2 — Сложный заказчик</option>
+                <option value="1">1 — Очень сложный заказчик</option>
+              </select>
+            </label>
+            <label className="input-wrap">
+              <span>Комментарий</span>
+              <textarea
+                rows={3}
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                placeholder="Опишите опыт работы с этим заказчиком"
+              />
+            </label>
+            <button className="primary" type="submit" disabled={isReviewing}>
+              {isReviewing ? t("order.review.submitting") : "Оставить отзыв о заказчике"}
+            </button>
+          </form>
+        </section>
+      )}
+
+      {/* Show left reviews */}
+      {order.clientReview && (
         <section className="section-grid">
           <div>
             <p className="eyebrow">{t("order.review.my_eyebrow")}</p>
-            <h2>{t("order.review.my_title")}</h2>
+            <h2>Отзыв об исполнителе</h2>
           </div>
           <div className="review-card">
             <div className="review-head">
-              <strong>{t("order.review.my_rating", { rating: String(order.review.rating) })}</strong>
+              <strong>Оценка: {order.clientReview.rating}/5</strong>
             </div>
-            <p className="muted">{order.review.comment}</p>
+            <p className="muted">{order.clientReview.comment}</p>
+          </div>
+        </section>
+      )}
+
+      {order.providerReview && (
+        <section className="section-grid">
+          <div>
+            <p className="eyebrow">Отзыв исполнителя</p>
+            <h2>Отзыв о заказчике</h2>
+          </div>
+          <div className="review-card">
+            <div className="review-head">
+              <strong>Оценка: {order.providerReview.rating}/5</strong>
+            </div>
+            <p className="muted">{order.providerReview.comment}</p>
           </div>
         </section>
       )}

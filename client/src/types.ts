@@ -93,11 +93,10 @@ export type ServiceOrder = {
     id: number;
     name: string;
   };
-  review?: {
-    rating: number;
-    comment: string;
-    createdAt: string;
-  } | null;
+  /** @deprecated use clientReview */
+  review?: { rating: number; comment: string; createdAt: string } | null;
+  clientReview?: { rating: number; comment: string; createdAt: string } | null;
+  providerReview?: { rating: number; comment: string; createdAt: string } | null;
 };
 
 export type Notification = {
@@ -146,4 +145,51 @@ export type MetaResponse = {
 export type AuthResponse = {
   user: User;
   token: string;
+};
+
+export type Badge = {
+  badge: string;
+  earnedAt: string;
+};
+
+export type NewsItem = {
+  id: number;
+  title: string;
+  url: string;
+  imageUrl: string;
+  publishedAt: string;
+  fetchedAt: string;
+};
+
+export type Favorite = {
+  id: number;
+  adId?: number;
+  serviceId?: number;
+  createdAt: string;
+  ad?: { title: string; price: number; category: string; status: string; image: string } | null;
+  service?: { title: string; price: number; category: string; image: string } | null;
+};
+
+export type Report = {
+  id: number;
+  reporterName: string;
+  targetType: "ad" | "service" | "user";
+  targetId: number;
+  reason: string;
+  comment: string;
+  status: "pending" | "reviewed" | "dismissed";
+  createdAt: string;
+};
+
+export type PublicProfile = {
+  id: number;
+  name: string;
+  university: string;
+  isVerified: boolean;
+  joinedAt: string;
+  stats: { completedOrders: number; ratingAvg: number | null; ratingCount: number };
+  badges: Badge[];
+  ads: Array<{ id: number; title: string; category: string; price: number; status: string; createdAt: string; image: string }>;
+  services: Array<{ id: number; title: string; category: string; price: number; createdAt: string; image: string; ratingAvg: number | null; ratingCount: number }>;
+  reviews: Array<{ rating: number; comment: string; createdAt: string; clientName: string }>;
 };

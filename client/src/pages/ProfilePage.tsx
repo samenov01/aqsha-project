@@ -31,11 +31,19 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
 
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
 
-  const toggleTheme = () => {
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     const nextTheme = theme === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    localStorage.setItem("theme", nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
+    document.documentElement.style.setProperty("--vt-x", `${e.clientX}px`);
+    document.documentElement.style.setProperty("--vt-y", `${e.clientY}px`);
+
+    const apply = () => {
+      setTheme(nextTheme);
+      localStorage.setItem("theme", nextTheme);
+      document.documentElement.setAttribute("data-theme", nextTheme);
+    };
+
+    if (!document.startViewTransition) { apply(); return; }
+    document.startViewTransition(apply);
   };
 
   useEffect(() => {

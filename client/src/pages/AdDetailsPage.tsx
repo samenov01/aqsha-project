@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getAdById } from "../api/ads";
 import { useTranslation } from "../i18n";
 import { getAdMessages, sendAdMessage, markAdMessagesRead, getAdChats } from "../api/adChat";
+import { createReport } from "../api/reports";
 import { sendTypingStatus } from "../api/stream";
 import type { AdChatParticipant } from "../api/adChat";
 import { ApiError } from "../api/client";
@@ -43,6 +44,10 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
   const [onlineUsers, setOnlineUsers] = useState<Set<number>>(new Set());
   const [typingUsers, setTypingUsers] = useState<Set<number>>(new Set());
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState("spam");
+  const [reportComment, setReportComment] = useState("");
+  const [reportSent, setReportSent] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -469,6 +474,56 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
             {t("ad_details.btn.back_market")}
           </Link>
         </div>
+
+        {token && !isOwner && (
+          <div style={{ marginTop: "0.75rem" }}>
+            {reportSent ? (
+              <p className="muted" style={{ fontSize: "0.8rem" }}>Жалоба отправлена</p>
+            ) : (
+              <button
+                className="ghost"
+                style={{ color: "var(--md-error, #b00020)", fontSize: "0.8rem", width: "100%" }}
+                onClick={() => setShowReportForm((v) => !v)}
+              >
+                Пожаловаться на объявление
+              </button>
+            )}
+            {showReportForm && (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!token) return;
+                  await createReport("ad", ad.id, reportReason, reportComment, token);
+                  setReportSent(true);
+                  setShowReportForm(false);
+                }}
+                style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}
+              >
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)" }}
+                >
+                  <option value="spam">Спам</option>
+                  <option value="fraud">Мошенничество</option>
+                  <option value="inappropriate">Неприемлемый контент</option>
+                  <option value="duplicate">Дубликат</option>
+                  <option value="other">Другое</option>
+                </select>
+                <textarea
+                  rows={2}
+                  value={reportComment}
+                  onChange={(e) => setReportComment(e.target.value)}
+                  placeholder="Комментарий (необязательно)"
+                  style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", resize: "vertical" }}
+                />
+                <button className="primary" type="submit" style={{ fontSize: "0.85rem" }}>
+                  Отправить жалобу
+                </button>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

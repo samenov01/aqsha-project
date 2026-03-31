@@ -19,6 +19,9 @@ import { AdDetailsPage } from "./pages/AdDetailsPage";
 import { ServiceEditPage } from "./pages/ServiceEditPage";
 import { AdminAdsPage } from "./pages/AdminAdsPage";
 import { WalletPage } from "./pages/WalletPage";
+import { PublicProfilePage } from "./pages/PublicProfilePage";
+import { FavoritesPage } from "./pages/FavoritesPage";
+import { NewsPage } from "./pages/NewsPage";
 import type { Ad, User } from "./types";
 import { I18nProvider } from "./i18n";
 
@@ -162,6 +165,9 @@ export default function App() {
             element={<ProfilePage key={token || "guest"} user={user} token={token} onLogin={onAuth} onLogout={onLogout} />}
           />
           <Route path="/ad/:id" element={<AdDetailsPage favorites={favorites} onToggleFavorite={toggleFavorite} token={token} user={user} />} />
+          <Route path="/users/:id" element={<PublicProfilePage />} />
+          <Route path="/favorites" element={<FavoritesPage token={token} />} />
+          <Route path="/news" element={<NewsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </SiteLayout>

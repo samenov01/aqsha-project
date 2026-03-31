@@ -35,8 +35,21 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  function toggleTheme() {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  function toggleTheme(e: React.MouseEvent<HTMLButtonElement>) {
+    const next = theme === "dark" ? "light" : "dark";
+
+    document.documentElement.style.setProperty("--vt-x", `${e.clientX}px`);
+    document.documentElement.style.setProperty("--vt-y", `${e.clientY}px`);
+
+    const apply = () => {
+      // Update DOM synchronously so View Transition captures the new state
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("theme", next);
+      setTheme(next);
+    };
+
+    if (!document.startViewTransition) { apply(); return; }
+    document.startViewTransition(apply);
   }
 
   return (
@@ -58,6 +71,8 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
             {t("nav.notifications")}
             {notificationsCount > 0 && <span className="nav-badge">{notificationsCount}</span>}
           </NavLink>
+          <NavLink to="/favorites">Избранное</NavLink>
+          <NavLink to="/news">Жаңалықтар</NavLink>
           {user?.isAdmin && <NavLink to="/admin/ads">{t("nav.admin")}</NavLink>}
         </nav>
 
@@ -65,7 +80,7 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
           <button
             className="theme-toggle"
             type="button"
-            onClick={toggleTheme}
+            onClick={(e) => toggleTheme(e)}
             aria-label={theme === "dark" ? "Switch to light" : "Switch to dark"}
             title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
           >

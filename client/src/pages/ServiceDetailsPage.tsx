@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getServiceById } from "../api/services";
 import { useTranslation } from "../i18n";
 import { createOrder } from "../api/orders";
+import { createReport } from "../api/reports";
 import { ApiError } from "../api/client";
 import { formatPrice } from "../lib/formatters";
 import { IconStar } from "../components/icons/Icons";
@@ -20,6 +21,10 @@ export function ServiceDetailsPage({ token, user }: ServiceDetailsPageProps) {
   const [mainImage, setMainImage] = useState("");
   const [error, setError] = useState("");
   const [isOrdering, setIsOrdering] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState("spam");
+  const [reportComment, setReportComment] = useState("");
+  const [reportSent, setReportSent] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -47,6 +52,18 @@ export function ServiceDetailsPage({ token, user }: ServiceDetailsPageProps) {
       isActive = false;
     };
   }, [params.id]);
+
+  async function handleReport(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token || !service) return;
+    try {
+      await createReport("service", service.id, reportReason, reportComment, token);
+      setReportSent(true);
+      setShowReportForm(false);
+    } catch (_err) {
+      // ignore
+    }
+  }
 
   async function handleOrder() {
     if (!token || !service) return;
@@ -174,7 +191,45 @@ export function ServiceDetailsPage({ token, user }: ServiceDetailsPageProps) {
             <Link className="ghost" to="/services">
               {t("service_details.btn.back")}
             </Link>
+            {token && !isOwner && !reportSent && (
+              <button
+                className="ghost"
+                style={{ color: "var(--md-error, #b00020)", fontSize: "0.8rem", marginTop: "0.5rem" }}
+                onClick={() => setShowReportForm((v) => !v)}
+              >
+                Пожаловаться
+              </button>
+            )}
+            {reportSent && (
+              <p className="muted" style={{ fontSize: "0.8rem" }}>Жалоба отправлена</p>
+            )}
           </div>
+
+          {showReportForm && (
+            <form onSubmit={handleReport} style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <select
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid var(--border)" }}
+              >
+                <option value="spam">Спам</option>
+                <option value="fraud">Мошенничество</option>
+                <option value="inappropriate">Неприемлемый контент</option>
+                <option value="duplicate">Дубликат</option>
+                <option value="other">Другое</option>
+              </select>
+              <textarea
+                rows={2}
+                value={reportComment}
+                onChange={(e) => setReportComment(e.target.value)}
+                placeholder="Дополнительный комментарий (необязательно)"
+                style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid var(--border)", resize: "vertical" }}
+              />
+              <button className="primary" type="submit" style={{ fontSize: "0.85rem" }}>
+                Отправить жалобу
+              </button>
+            </form>
+          )}
           
           {(service.phone || service.whatsapp || service.telegram) && (
             <div className="contact-methods" style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1.5rem" }}>

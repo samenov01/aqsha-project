@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const { run, get } = require("./client");
-const { DEFAULT_UNIVERSITY, CATEGORIES, DEMO_IMAGE } = require("../constants");
+const { DEFAULT_UNIVERSITY, CATEGORIES, EMPLOYMENT_TYPES, MICRORAYONS, DEMO_IMAGE } = require("../constants");
 
 async function initDb() {
   await run(
@@ -76,6 +76,10 @@ async function initDb() {
       contact_whatsapp TEXT DEFAULT '',
       contact_telegram TEXT DEFAULT '',
       status TEXT NOT NULL DEFAULT 'active',
+      employment_type TEXT DEFAULT '',
+      experience_level TEXT DEFAULT '',
+      microrayon TEXT DEFAULT '',
+      skills TEXT DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
     )`
@@ -87,6 +91,12 @@ async function initDb() {
     // Column already exists.
   }
   await run("UPDATE ads SET status = 'active' WHERE status IS NULL OR status = ''");
+
+  // New job-related columns
+  try { await run("ALTER TABLE ads ADD COLUMN employment_type TEXT DEFAULT ''"); } catch (_) {}
+  try { await run("ALTER TABLE ads ADD COLUMN experience_level TEXT DEFAULT ''"); } catch (_) {}
+  try { await run("ALTER TABLE ads ADD COLUMN microrayon TEXT DEFAULT ''"); } catch (_) {}
+  try { await run("ALTER TABLE ads ADD COLUMN skills TEXT DEFAULT ''"); } catch (_) {}
 
   await run(
     `CREATE TABLE IF NOT EXISTS images (
@@ -294,6 +304,43 @@ async function initDb() {
     )`
   );
 
+  // ── Job Applications (отклики) ────────────────────────────────────────
+  await run(
+    `CREATE TABLE IF NOT EXISTS applications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      job_id INTEGER NOT NULL,
+      applicant_id INTEGER NOT NULL,
+      cover_letter TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'viewed', 'accepted', 'rejected')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(job_id, applicant_id),
+      FOREIGN KEY(job_id) REFERENCES ads(id) ON DELETE CASCADE,
+      FOREIGN KEY(applicant_id) REFERENCES users(id) ON DELETE CASCADE
+    )`
+  );
+
+  // User skills & role
+  try { await run("ALTER TABLE users ADD COLUMN skills TEXT DEFAULT ''"); } catch (_) {}
+  try { await run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'seeker'"); } catch (_) {}
+  try { await run("ALTER TABLE users ADD COLUMN telegram_chat_id TEXT DEFAULT ''"); } catch (_) {}
+
+  await run("CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id)");
+  await run("CREATE INDEX IF NOT EXISTS idx_applications_applicant_id ON applications(applicant_id)");
+
+  // User preferred microrayon (for AI location matching)
+  try { await run("ALTER TABLE users ADD COLUMN preferred_microrayon TEXT DEFAULT ''"); } catch (_) {}
+
+  // Telegram one-time link tokens
+  await run(
+    `CREATE TABLE IF NOT EXISTS telegram_link_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`
+  );
+
   // ── Reports (жалобы) ──────────────────────────────────────────────────
   await run(
     `CREATE TABLE IF NOT EXISTS reports (
@@ -419,93 +466,126 @@ async function initDb() {
 
 async function seedDemoData() {
   const passwordHash = await bcrypt.hash("Demo12345", 10);
-  const userResult = await run(
-    `INSERT INTO users (name, email, university, password_hash, is_verified) VALUES (?, ?, ?, ?, ?)`,
-    ["Demo User", "demo@aqsha.kz", DEFAULT_UNIVERSITY, passwordHash, 1]
+
+  const employer = await run(
+    `INSERT INTO users (name, email, university, password_hash, is_verified, role) VALUES (?, ?, ?, ?, ?, ?)`,
+    ["Кафе «Актау»", "employer@jumys.kz", DEFAULT_UNIVERSITY, passwordHash, 1, "employer"]
   );
 
-  const demoAds = [
+  const demoJobs = [
     {
-      title: "Сделаю презентацию за вечер",
+      title: "Официант / Бармен в кафе",
+      category: CATEGORIES[0],
+      price: 150000,
+      employmentType: EMPLOYMENT_TYPES[0],
+      experienceLevel: "Без опыта",
+      microrayon: "5 мкр",
+      skills: "общение,обслуживание,кассовый аппарат",
+      description: "Требуется официант/бармен. График 2/2. Обучаем с нуля. Молодёжный коллектив. Чаевые от клиентов. Оформление по договору.",
+      phone: "+7 701 123 45 67",
+      whatsapp: "+7 701 123 45 67",
+      telegram: "@aktau_cafe_hr",
+    },
+    {
+      title: "Разнорабочий на стройку (вахта)",
       category: CATEGORIES[1],
-      price: 9000,
-      description: "Чистый дизайн, структура по дедлайну и правки до финала.",
-      phone: "+7 777 111 22 33",
-      telegram: "@aqsha_designer",
+      price: 200000,
+      employmentType: EMPLOYMENT_TYPES[0],
+      experienceLevel: "Без опыта",
+      microrayon: "Жетыбай",
+      skills: "физическая работа,инструменты,вахта",
+      description: "Нужны разнорабочие на строительный объект в Жетыбае. Вахтовый метод 15/15. Жильё и питание предоставляем. Официальное трудоустройство.",
+      phone: "+7 777 999 11 22",
+      whatsapp: "+7 777 999 11 22",
     },
     {
-      title: "Куизы/NEO отвечаю",
+      title: "Кассир в магазин продуктов",
       category: CATEGORIES[2],
-      price: 7000,
-      description: "Помогу с квизами, тестами и NEO A1/A2. Быстро и аккуратно.",
-      whatsapp: "+7 701 555 10 10",
+      price: 120000,
+      employmentType: EMPLOYMENT_TYPES[0],
+      experienceLevel: "До 1 года",
+      microrayon: "9 мкр",
+      skills: "касса,1С,внимательность,честность",
+      description: "Ищем кассира в продуктовый магазин. График 5/2. Опыт работы с кассой приветствуется. Ответственность и честность — главные качества.",
+      phone: "+7 702 555 33 44",
+      telegram: "@aktau_shop_job",
     },
     {
-      title: "Сдам микронаушник для экзамена",
+      title: "Мастер маникюра / Косметолог",
       category: CATEGORIES[3],
-      price: 0,
-      description: "Аренда микронаушника/петлички на экзамен, есть инструкции.",
-      telegram: "@aqsha_micro",
+      price: 180000,
+      employmentType: EMPLOYMENT_TYPES[0],
+      experienceLevel: "1–3 года",
+      microrayon: "3 мкр",
+      skills: "маникюр,педикюр,косметология,клиентоориентированность",
+      description: "Салон красоты приглашает мастера маникюра или косметолога. Место в аренду или процент от выручки. Готовая клиентская база. Удобный график.",
+      phone: "+7 705 444 77 88",
+      whatsapp: "+7 705 444 77 88",
+    },
+    {
+      title: "Frontend-разработчик (Junior/Middle)",
+      category: CATEGORIES[4],
+      price: 350000,
+      employmentType: EMPLOYMENT_TYPES[0],
+      experienceLevel: "1–3 года",
+      microrayon: "Центр",
+      skills: "React,JavaScript,TypeScript,HTML,CSS,Git",
+      description: "IT-компания Актау ищет Frontend-разработчика. Стек: React, TypeScript. Удалённая работа возможна. Молодая команда, интересные проекты.",
+      phone: "+7 776 111 22 33",
+      telegram: "@aktau_it_hr",
+    },
+    {
+      title: "Водитель категории B/C (доставка)",
+      category: CATEGORIES[5],
+      price: 160000,
+      employmentType: EMPLOYMENT_TYPES[0],
+      experienceLevel: "До 1 года",
+      microrayon: "12 мкр",
+      skills: "вождение,категория B,GPS,пунктуальность",
+      description: "Служба доставки ищет водителя. Наш автомобиль, топливо за наш счёт. График гибкий. Нужны права категории B и знание города Актау.",
+      phone: "+7 747 222 55 66",
+      whatsapp: "+7 747 222 55 66",
     },
   ];
 
-  for (const ad of demoAds) {
+  for (const job of demoJobs) {
     const adResult = await run(
       `INSERT INTO ads (
         user_id, title, category, price, university, description,
-        contact_phone, contact_whatsapp, contact_telegram
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        contact_phone, contact_whatsapp, contact_telegram,
+        employment_type, experience_level, microrayon, skills
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        userResult.lastID,
-        ad.title,
-        ad.category,
-        ad.price,
+        employer.lastID,
+        job.title,
+        job.category,
+        job.price,
         DEFAULT_UNIVERSITY,
-        ad.description,
-        ad.phone || "",
-        ad.whatsapp || "",
-        ad.telegram || "",
+        job.description,
+        job.phone || "",
+        job.whatsapp || "",
+        job.telegram || "",
+        job.employmentType,
+        job.experienceLevel,
+        job.microrayon,
+        job.skills,
       ]
     );
 
     await run(`INSERT INTO images (ad_id, url) VALUES (?, ?)`, [adResult.lastID, DEMO_IMAGE]);
   }
 
-  const demoServices = [
-    {
-      title: "Сделаю учебные работы под ключ",
-      category: CATEGORIES[0],
-      price: 15000,
-      description: "Презентации, рефераты, эссе, доклады, БӨЖ/БОӨЖ.",
-    },
-    {
-      title: "Помогу с квизами и NEO",
-      category: CATEGORIES[2],
-      price: 8000,
-      description: "Куизы/тесты/NEO A1/A2, ответы на сессию.",
-    },
-  ];
+  // Demo seeker profiles (services)
+  const seekerHash = await bcrypt.hash("Demo12345", 10);
+  const seeker = await run(
+    `INSERT INTO users (name, email, university, password_hash, is_verified, role, skills) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ["Алибек Сейткали", "seeker@jumys.kz", DEFAULT_UNIVERSITY, seekerHash, 1, "seeker", "React,JavaScript,Node.js,Python,Git"]
+  );
 
-  for (const service of demoServices) {
-    const serviceResult = await run(
-      `INSERT INTO services (
-        user_id, title, category, price, university, description
-      ) VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        userResult.lastID,
-        service.title,
-        service.category,
-        service.price,
-        DEFAULT_UNIVERSITY,
-        service.description,
-      ]
-    );
-
-    await run(`INSERT INTO service_images (service_id, url) VALUES (?, ?)`, [
-      serviceResult.lastID,
-      DEMO_IMAGE,
-    ]);
-  }
+  await run(
+    `INSERT INTO services (user_id, title, category, price, university, description, contact_telegram) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [seeker.lastID, "Ищу работу: Junior Frontend Developer", CATEGORIES[4], 200000, DEFAULT_UNIVERSITY, "Молодой разработчик, 1 год опыта в React и JavaScript. Ищу стажировку или работу с наставником. Готов к обучению. Портфолио по запросу.", "@alibek_dev"]
+  );
 }
 
 module.exports = {

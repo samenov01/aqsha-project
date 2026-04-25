@@ -11,7 +11,7 @@ type SiteLayoutProps = {
   notificationsCount?: number;
 };
 
-export function SiteLayout({ children, user, favoritesCount, notificationsCount = 0 }: SiteLayoutProps) {
+export function SiteLayout({ children, user, favoritesCount: _favoritesCount, notificationsCount = 0 }: SiteLayoutProps) {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const userName = user?.name;
@@ -26,9 +26,7 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
     }
   });
 
-  const toggleLang = () => {
-    setLang(lang === "ru" ? "kk" : "ru");
-  };
+  const toggleLang = () => setLang(lang === "ru" ? "kk" : "ru");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -37,17 +35,13 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
 
   function toggleTheme(e: React.MouseEvent<HTMLButtonElement>) {
     const next = theme === "dark" ? "light" : "dark";
-
     document.documentElement.style.setProperty("--vt-x", `${e.clientX}px`);
     document.documentElement.style.setProperty("--vt-y", `${e.clientY}px`);
-
     const apply = () => {
-      // Update DOM synchronously so View Transition captures the new state
       document.documentElement.setAttribute("data-theme", next);
       localStorage.setItem("theme", next);
       setTheme(next);
     };
-
     if (!document.startViewTransition) { apply(); return; }
     document.startViewTransition(apply);
   }
@@ -55,34 +49,33 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
   return (
     <div className={`app-shell ${isHome ? "app-shell-home" : ""}`}>
       <header className="topbar topbar-glass">
+        {/* Brand */}
         <Link to="/" className="brand-text">
-          <img src="/aqsha.png" alt="logo" className="brand-logo" />
-          <span className="brand-logo-text">aqsha.</span>
+          <img src="/aqsha.png" alt="JumysAI" className="brand-logo" />
+          <span className="brand-logo-text">JumysAI.</span>
         </Link>
 
+        {/* Navigation tabs */}
         <nav className="main-nav">
-          <NavLink to="/" end>
-            {t("nav.home")}
-          </NavLink>
+          <NavLink to="/" end>{t("nav.home")}</NavLink>
           <NavLink to="/market">{t("nav.market")}</NavLink>
           <NavLink to="/services">{t("nav.services")}</NavLink>
-          <NavLink to="/orders">{t("nav.orders")}</NavLink>
+          {user && <NavLink to="/applications">{t("nav.applications")}</NavLink>}
           <NavLink to="/notifications" className="nav-with-badge">
             {t("nav.notifications")}
             {notificationsCount > 0 && <span className="nav-badge">{notificationsCount}</span>}
           </NavLink>
-          <NavLink to="/favorites">Избранное</NavLink>
-          <NavLink to="/news">Жаңалықтар</NavLink>
+          {user && <NavLink to="/ai-match">{t("nav.ai_match")}</NavLink>}
           {user?.isAdmin && <NavLink to="/admin/ads">{t("nav.admin")}</NavLink>}
         </nav>
 
+        {/* Actions */}
         <div className="topbar-actions">
           <button
             className="theme-toggle"
             type="button"
-            onClick={(e) => toggleTheme(e)}
+            onClick={toggleTheme}
             aria-label={theme === "dark" ? "Switch to light" : "Switch to dark"}
-            title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
           >
             {theme === "dark" ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -103,28 +96,26 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
             )}
           </button>
 
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={toggleLang}
             className="theme-toggle"
             title="Сменить язык / Тілді ауыстыру"
-            style={{ fontSize: "0.8rem", fontWeight: 700, width: "auto", padding: "0 0.6rem" }}
+            style={{ fontSize: "0.75rem", fontWeight: 700, width: "auto", padding: "0 0.625rem", letterSpacing: "0.04em" }}
           >
             {lang === "ru" ? "KK" : "RU"}
           </button>
-          
-          <Link
-            className="header-profile"
-            to="/profile"
-            aria-label={`${userName || t("nav.profile")}. Избранных: ${favoritesCount}`}
-          >
+
+          <Link className="header-profile" to="/profile" aria-label={userName || t("nav.profile")}>
             {userName || t("nav.profile")}
           </Link>
+
           <Link className="header-cta" to="/publish">
             {t("nav.publish")}
           </Link>
         </div>
       </header>
+
       <main>{children}</main>
     </div>
   );

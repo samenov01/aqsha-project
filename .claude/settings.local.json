@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check server/routes/ai-routes.js)",
+      "Bash(node --check server/telegram-bot.js)",
+      "Bash(node --check server/routes/telegram-routes.js)",
+      "Bash(node --check server/app.js)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\)\")",
+      "Bash(node --check server/middleware/auth.js)",
+      "Bash(node --check server/routes/auth-routes.js)",
+      "Bash(npm run *)",
+      "Bash(node server/index.js)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(kill %1)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/market)",
+      "Bash(curl -s http://localhost:3000/profile)",
+      "Read(//c/Users/isera/Documents/нужное все/aqsha/aqsha-project/**)",
+      "Read(//c/Users/isera/Documents/нужное все/aqsha/aqsha-project/=== /api/**)",
+      "Bash(curl -s http://localhost:3000/api/health kill %1)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(node -e \" const app = require\\('./server/app'\\).createApp\\(\\); app.listen\\(3001, \\(\\) => { const http = require\\('http'\\); http.get\\('http://localhost:3001/', \\(r\\) => { console.log\\('STATUS:', r.statusCode, r.headers['content-type']\\); r.on\\('data', d => process.stdout.write\\(d.toString\\(\\).slice\\(0,200\\)\\)\\); r.on\\('end', \\(\\) => { process.exit\\(0\\); }\\); }\\); }\\); \")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

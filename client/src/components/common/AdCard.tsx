@@ -12,7 +12,7 @@ type AdCardProps = {
 export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
-  const location = ad.user?.university || ad.university;
+  const location = ad.microrayon || ad.user?.university || ad.university;
 
   const dateLabel = (() => {
     if (!ad.createdAt) return "";
@@ -40,7 +40,7 @@ export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
     >
       <div className="ad-card-image">
         <img
-          src={ad.images?.[0] || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=60"}
+          src={ad.images?.[0] || "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=60"}
           alt={ad.title}
           loading="lazy"
         />
@@ -57,13 +57,34 @@ export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
         {ad.user?.verified && (
           <span className="ad-verified-overlay">{t("ad_card.verified")}</span>
         )}
+        {ad.employmentType && (
+          <span style={{
+            position: "absolute", top: "8px", left: "8px",
+            background: "color-mix(in srgb,var(--md-surface-container-highest) 88%,transparent)",
+            color: "var(--md-on-surface)",
+            fontSize: "0.68rem", fontWeight: 600,
+            padding: "0.15rem 0.55rem",
+            borderRadius: "var(--md-shape-full)",
+            backdropFilter: "blur(6px)",
+            border: "1px solid var(--md-outline-variant)",
+          }}>
+            {ad.employmentType}
+          </span>
+        )}
       </div>
 
       <div className="ad-card-content">
         <span className="ad-category-chip">{ad.category}</span>
         <h3 className="ad-card-title">{ad.title}</h3>
+        {ad.experienceLevel && (
+          <div style={{ fontSize: "0.75rem", opacity: 0.6, marginBottom: "0.25rem" }}>
+            Опыт: {ad.experienceLevel}
+          </div>
+        )}
         <div className="ad-card-footer">
-          <span className="ad-card-price">{formatPrice(ad.price)}</span>
+          <span className="ad-card-price">
+            {ad.price > 0 ? `${formatPrice(ad.price)}/мес` : t("ad_card.negotiable")}
+          </span>
           <div className="ad-card-meta">
             {location && (
               <span className="ad-card-location">

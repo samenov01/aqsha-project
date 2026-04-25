@@ -2,7 +2,8 @@ const fs = require("fs");
 const { PORT, DATA_DIR, UPLOAD_DIR } = require("./config");
 const { createApp } = require("./app");
 const { initDb } = require("./db/init");
-const { close } = require("./db/client");
+const { close, all } = require("./db/client");
+const { startTelegramBot } = require("./telegram-bot");
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -12,8 +13,11 @@ async function bootstrap() {
 
   const app = createApp();
   const server = app.listen(PORT, () => {
-    console.log(`aqsha server running at http://localhost:${PORT}`);
+    console.log(`JumysAI server running at http://localhost:${PORT}`);
   });
+
+  // Start Telegram bot (only if TELEGRAM_BOT_TOKEN is set)
+  startTelegramBot();
 
   const shutdown = async () => {
     server.close(async () => {

@@ -22,18 +22,47 @@ import { WalletPage } from "./pages/WalletPage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { NewsPage } from "./pages/NewsPage";
+import { ApplicationsPage } from "./pages/ApplicationsPage";
+import { AiMatchPage } from "./pages/AiMatchPage";
 import type { Ad, User } from "./types";
 import { I18nProvider } from "./i18n";
 
 const fallbackCategories = [
-  "Учебные работы под ключ",
-  "Презентации / слайды",
-  "Куизы / тесты / NEO / ответы на сессию",
-  "Аренда микронаушника / петлички",
-  "Моб. интернет / GB (Beeline/Tele2/Activ)",
-  "Билеты / ивенты",
-  "Аренда квартиры / комнаты",
-  "Справки / деканат / пересдача",
+  "Рестораны и общепит",
+  "Строительство и недвижимость",
+  "Продажи и торговля",
+  "Красота и здоровье",
+  "IT, интернет и дизайн",
+  "Транспорт и логистика",
+  "Охрана и безопасность",
+  "Административный персонал",
+  "Образование и наука",
+  "Медицина и фармацевтика",
+  "Производство и сырьё",
+  "Бухгалтерия и финансы",
+  "Маркетинг и реклама",
+  "Рабочий персонал",
+  "Другое",
+];
+
+const fallbackEmploymentTypes = ["Полная занятость", "Частичная занятость", "Проектная работа", "Стажировка", "Вахтовый метод"];
+const fallbackExperienceLevels = ["Без опыта", "От 1 года", "От 3 лет", "От 6 лет"];
+const fallbackMicrorayons = [
+  "1 мкр","2 мкр","3 мкр","3А мкр","3Б мкр",
+  "4 мкр","5 мкр","6 мкр","7 мкр","8 мкр","9 мкр",
+  "10 мкр","11 мкр","12 мкр","13 мкр","14 мкр","15 мкр",
+  "16 мкр","17 мкр",
+  "18 мкр","19 мкр","19А мкр",
+  "20 мкр","20А мкр",
+  "21 мкр","22 мкр","23 мкр","24 мкр","25 мкр",
+  "26 мкр","27 мкр","28 мкр","28А мкр","29 мкр","29А мкр",
+  "30 мкр","31 мкр","31А мкр","31Б мкр",
+  "32 мкр","32А мкр","32Б мкр","32В мкр",
+  "33 мкр","34 мкр","34А мкр",
+  "35 мкр","36 мкр","37 мкр","38 мкр","39 мкр",
+  "Шыгыс 1","Шыгыс 2","Шыгыс 3",
+  "Приморский","Рауан","Самал","Акшукур",
+  "Центр","Другое",
 ];
 
 export default function App() {
@@ -49,13 +78,19 @@ export default function App() {
   const [notificationsCount, setNotificationsCount] = useState(0);
 
   const [categories, setCategories] = useState<string[]>(fallbackCategories);
-  const [defaultUniversity, setDefaultUniversity] = useState("Yessenov University (Aktau)");
+  const [employmentTypes, setEmploymentTypes] = useState<string[]>(fallbackEmploymentTypes);
+  const [experienceLevels, setExperienceLevels] = useState<string[]>(fallbackExperienceLevels);
+  const [microrayons, setMicrorayons] = useState<string[]>(fallbackMicrorayons);
+  const [defaultUniversity, setDefaultUniversity] = useState("Актау");
   const [homeAds, setHomeAds] = useState<Ad[]>([]);
 
   useEffect(() => {
     getMeta()
       .then((meta) => {
         setCategories(meta.categories);
+        if (meta.employmentTypes) setEmploymentTypes(meta.employmentTypes);
+        if (meta.experienceLevels) setExperienceLevels(meta.experienceLevels);
+        if (meta.microrayons) setMicrorayons(meta.microrayons);
         setDefaultUniversity(meta.defaultUniversity);
       })
       .catch(() => undefined);
@@ -74,13 +109,8 @@ export default function App() {
 
     localStorage.setItem(storageKeys.token, token);
     getMe(token)
-      .then((response) => {
-        setUser(response.user);
-      })
-      .catch(() => {
-        setToken(null);
-        setUser(null);
-      });
+      .then((response) => setUser(response.user))
+      .catch(() => { setToken(null); setUser(null); });
 
     getUnreadCount(token)
       .then((data) => setNotificationsCount(data.count))
@@ -88,9 +118,7 @@ export default function App() {
   }, [token]);
 
   useEffect(() => {
-    if (user) {
-      saveJson(storageKeys.user, user);
-    }
+    if (user) saveJson(storageKeys.user, user);
   }, [user]);
 
   useEffect(() => {
@@ -100,11 +128,7 @@ export default function App() {
   function toggleFavorite(id: number) {
     setFavorites((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   }
@@ -123,10 +147,7 @@ export default function App() {
   const favoritesCount = useMemo(() => favorites.size, [favorites]);
 
   const refreshNotifications = useCallback(() => {
-    if (!token) {
-      setNotificationsCount(0);
-      return;
-    }
+    if (!token) { setNotificationsCount(0); return; }
     getUnreadCount(token)
       .then((data) => setNotificationsCount(data.count))
       .catch(() => setNotificationsCount(0));
@@ -139,7 +160,16 @@ export default function App() {
           <Route path="/" element={<HomePage ads={homeAds} />} />
           <Route
             path="/market"
-            element={<MarketPage categories={categories} favorites={favorites} onToggleFavorite={toggleFavorite} />}
+            element={
+              <MarketPage
+                categories={categories}
+                employmentTypes={employmentTypes}
+                experienceLevels={experienceLevels}
+                microrayons={microrayons}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
+              />
+            }
           />
           <Route path="/services" element={<ServicesPage categories={categories} token={token} />} />
           <Route
@@ -154,20 +184,47 @@ export default function App() {
           <Route path="/orders" element={<OrdersPage token={token} />} />
           <Route path="/orders/:id" element={<OrderDetailsPage token={token} user={user} />} />
           <Route path="/notifications" element={<NotificationsPage token={token} onRefresh={refreshNotifications} />} />
-          <Route path="/wallet" element={<WalletPage token={token} user={user} updateUser={(updates) => setUser((prev) => (prev ? { ...prev, ...updates } : null))} />} />
+          <Route
+            path="/wallet"
+            element={<WalletPage token={token} user={user} updateUser={(updates) => setUser((prev) => (prev ? { ...prev, ...updates } : null))} />}
+          />
           <Route path="/admin/ads" element={<AdminAdsPage token={token} user={user} />} />
           <Route
             path="/publish"
-            element={<PublishPage token={token} categories={categories} defaultUniversity={defaultUniversity} />}
+            element={
+              <PublishPage
+                token={token}
+                categories={categories}
+                employmentTypes={employmentTypes}
+                experienceLevels={experienceLevels}
+                microrayons={microrayons}
+                defaultUniversity={defaultUniversity}
+              />
+            }
           />
           <Route
             path="/profile"
-            element={<ProfilePage key={token || "guest"} user={user} token={token} onLogin={onAuth} onLogout={onLogout} />}
+            element={
+              <ProfilePage
+                key={token || "guest"}
+                user={user}
+                token={token}
+                microrayons={microrayons}
+                onLogin={onAuth}
+                onLogout={onLogout}
+                onUpdateUser={(updates) => setUser((prev) => (prev ? { ...prev, ...updates } : null))}
+              />
+            }
           />
-          <Route path="/ad/:id" element={<AdDetailsPage favorites={favorites} onToggleFavorite={toggleFavorite} token={token} user={user} />} />
+          <Route
+            path="/ad/:id"
+            element={<AdDetailsPage favorites={favorites} onToggleFavorite={toggleFavorite} token={token} user={user} />}
+          />
           <Route path="/users/:id" element={<PublicProfilePage />} />
           <Route path="/favorites" element={<FavoritesPage token={token} />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/applications" element={<ApplicationsPage token={token} />} />
+          <Route path="/ai-match" element={<AiMatchPage token={token} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </SiteLayout>

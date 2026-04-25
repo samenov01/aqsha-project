@@ -1,9 +1,12 @@
-﻿import type { Ad, MetaResponse } from "../types";
+import type { Ad, MetaResponse, AiMatchResult } from "../types";
 import { apiRequest } from "./client";
 
 type AdsQuery = {
   search?: string;
   category?: string;
+  employmentType?: string;
+  experienceLevel?: string;
+  microrayon?: string;
   minPrice?: string;
   maxPrice?: string;
   sort?: string;
@@ -12,12 +15,10 @@ type AdsQuery = {
 
 function buildQuery(params: AdsQuery): string {
   const searchParams = new URLSearchParams();
-
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === "") return;
     searchParams.set(key, String(value));
   });
-
   const query = searchParams.toString();
   return query ? `?${query}` : "";
 }
@@ -77,6 +78,10 @@ export function createAd(
     phone: string;
     whatsapp: string;
     telegram: string;
+    employmentType: string;
+    experienceLevel: string;
+    microrayon: string;
+    skills: string;
     images: File[];
   },
   token: string
@@ -89,6 +94,10 @@ export function createAd(
   formData.append("phone", payload.phone);
   formData.append("whatsapp", payload.whatsapp);
   formData.append("telegram", payload.telegram);
+  formData.append("employmentType", payload.employmentType);
+  formData.append("experienceLevel", payload.experienceLevel);
+  formData.append("microrayon", payload.microrayon);
+  formData.append("skills", payload.skills);
   payload.images.forEach((file) => formData.append("images", file));
 
   return apiRequest<Ad>("/api/ads", {
@@ -96,4 +105,15 @@ export function createAd(
     body: formData,
     token,
   });
+}
+
+export function getAiMatchJobs(token: string) {
+  return apiRequest<AiMatchResult>("/api/ai/match/jobs", { token });
+}
+
+export function getAiMatchCandidates(jobId: number | string, token: string) {
+  return apiRequest<{ jobTitle: string; matches: Array<{ id: number; name: string; skills: string; matchScore: number; matchReason: string }> }>(
+    `/api/ai/match/candidates/${jobId}`,
+    { token }
+  );
 }

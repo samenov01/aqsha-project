@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getAdById } from "../api/ads";
 import { useTranslation } from "../i18n";
 import { getAdMessages, sendAdMessage, markAdMessagesRead, getAdChats } from "../api/adChat";
+import { applyToJob } from "../api/applications";
 import { createReport } from "../api/reports";
 import { sendTypingStatus } from "../api/stream";
 import type { AdChatParticipant } from "../api/adChat";
@@ -48,6 +49,15 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
   const [reportReason, setReportReason] = useState("spam");
   const [reportComment, setReportComment] = useState("");
   const [reportSent, setReportSent] = useState(false);
+
+  // Apply (отклик)
+  const [showApplyForm, setShowApplyForm] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const [applyError, setApplyError] = useState("");
+  const [applySuccess, setApplySuccess] = useState("");
+
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -311,11 +321,100 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
         </div>
         <p>{ad.description}</p>
 
+        {/* Job meta badges */}
+        {(ad.employmentType || ad.experienceLevel || ad.microrayon) && (
+          <div className="job-meta-badges">
+            {ad.employmentType && (
+              <span className="job-meta-badge type">💼 {ad.employmentType}</span>
+            )}
+            {ad.experienceLevel && (
+              <span className="job-meta-badge exp">🎯 Опыт: {ad.experienceLevel}</span>
+            )}
+            {ad.microrayon && (
+              <span className="job-meta-badge place">📍 {ad.microrayon}</span>
+            )}
+          </div>
+        )}
+
+        {ad.skills && (
+          <div className="skills-section">
+            <span className="skills-label">Требуемые навыки</span>
+            <div className="skills-tags">
+              {ad.skills.split(",").map((s) => s.trim()).filter(Boolean).map((skill) => (
+                <span key={skill} className="skill-tag">{skill}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="contacts-grid">
           {ad.contacts.phone && <span className="contact-item">{t("ad_details.contacts.phone")}{ad.contacts.phone}</span>}
           {ad.contacts.whatsapp && <span className="contact-item">{t("ad_details.contacts.whatsapp")}{ad.contacts.whatsapp}</span>}
           {ad.contacts.telegram && <span className="contact-item">{t("ad_details.contacts.telegram")}{ad.contacts.telegram}</span>}
         </div>
+
+        {/* Apply button (only for non-owners) */}
+        {!isOwner && token && ad.status === "active" && (
+          <div>
+            {applySuccess ? (
+              <div className="apply-success-box">✅ {applySuccess}</div>
+            ) : applied ? (
+              <button className="primary" disabled style={{ opacity: 0.6, width: "100%" }}>
+                {t("ad_details.btn.applied")}
+              </button>
+            ) : (
+              <>
+                {!showApplyForm ? (
+                  <button className="primary" type="button" style={{ width: "100%" }} onClick={() => setShowApplyForm(true)}>
+                    {t("ad_details.btn.apply")}
+                  </button>
+                ) : (
+                  <div className="apply-card">
+                    <label className="input-wrap">
+                      <span>{t("ad_details.apply.cover_label")}</span>
+                      <textarea
+                        rows={4}
+                        maxLength={1000}
+                        placeholder={t("ad_details.apply.cover_placeholder")}
+                        value={coverLetter}
+                        onChange={(e) => setCoverLetter(e.target.value)}
+                      />
+                    </label>
+                    {applyError && <p className="error-box">{applyError}</p>}
+                    <div style={{ display: "flex", gap: "0.6rem" }}>
+                      <button
+                        className="primary"
+                        type="button"
+                        disabled={isApplying}
+                        onClick={async () => {
+                          if (!token || !ad) return;
+                          setIsApplying(true);
+                          setApplyError("");
+                          try {
+                            await applyToJob(ad.id, coverLetter, token);
+                            setApplied(true);
+                            setApplySuccess(t("ad_details.apply.success"));
+                            setShowApplyForm(false);
+                          } catch (err: unknown) {
+                            if (err instanceof ApiError) setApplyError(err.message);
+                            else setApplyError("Ошибка при отклике");
+                          } finally {
+                            setIsApplying(false);
+                          }
+                        }}
+                      >
+                        {isApplying ? t("ad_details.btn.applying") : t("ad_details.btn.apply")}
+                      </button>
+                      <button className="ghost" type="button" onClick={() => setShowApplyForm(false)}>
+                        Отмена
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Chat Section */}
         {token ? (
@@ -370,16 +469,14 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
                        <p className="muted" style={{ padding: "1rem", textAlign: "center" }}>{t("ad_details.chat.empty_incoming")}</p>
                     )}
                     {!chatLoading && chatParticipants.map(p => (
-                      <div key={p.id} className="participant-row" onClick={() => handleSelectParticipant(p.id)} style={{ padding: '0.8rem', borderBottom: '1px solid var(--border)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background-color 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-light)')} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                         <div style={{display: 'flex', flexDirection: 'column'}}>
-                           <strong style={{fontSize: '0.95rem'}}>{p.name}</strong>
-                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{formatTime(p.last_message_at)}</span>
-                         </div>
-                         {p.unread_count > 0 && (
-                           <span style={{ background: 'var(--md-primary)', color: 'white', borderRadius: '10px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                             {p.unread_count}
-                           </span>
-                         )}
+                      <div key={p.id} className="participant-row" onClick={() => handleSelectParticipant(p.id)}>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <strong style={{ fontSize: "0.95rem" }}>{p.name}</strong>
+                          <span className="muted" style={{ fontSize: "0.75rem", marginTop: "2px" }}>{formatTime(p.last_message_at)}</span>
+                        </div>
+                        {p.unread_count > 0 && (
+                          <span className="nav-badge">{p.unread_count}</span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -476,13 +573,13 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
         </div>
 
         {token && !isOwner && (
-          <div style={{ marginTop: "0.75rem" }}>
+          <div className="report-section">
             {reportSent ? (
               <p className="muted" style={{ fontSize: "0.8rem" }}>Жалоба отправлена</p>
             ) : (
               <button
                 className="ghost"
-                style={{ color: "var(--md-error, #b00020)", fontSize: "0.8rem", width: "100%" }}
+                style={{ color: "var(--md-error)", fontSize: "0.8rem", width: "100%", borderColor: "var(--md-error)" }}
                 onClick={() => setShowReportForm((v) => !v)}
               >
                 Пожаловаться на объявление
@@ -490,6 +587,7 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
             )}
             {showReportForm && (
               <form
+                className="report-form"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   if (!token) return;
@@ -497,26 +595,21 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
                   setReportSent(true);
                   setShowReportForm(false);
                 }}
-                style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}
               >
-                <select
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)" }}
-                >
-                  <option value="spam">Спам</option>
-                  <option value="fraud">Мошенничество</option>
-                  <option value="inappropriate">Неприемлемый контент</option>
-                  <option value="duplicate">Дубликат</option>
-                  <option value="other">Другое</option>
-                </select>
-                <textarea
-                  rows={2}
-                  value={reportComment}
-                  onChange={(e) => setReportComment(e.target.value)}
-                  placeholder="Комментарий (необязательно)"
-                  style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", resize: "vertical" }}
-                />
+                <label className="input-wrap">
+                  <span>Причина</span>
+                  <select value={reportReason} onChange={(e) => setReportReason(e.target.value)}>
+                    <option value="spam">Спам</option>
+                    <option value="fraud">Мошенничество</option>
+                    <option value="inappropriate">Неприемлемый контент</option>
+                    <option value="duplicate">Дубликат</option>
+                    <option value="other">Другое</option>
+                  </select>
+                </label>
+                <label className="input-wrap">
+                  <span>Комментарий (необязательно)</span>
+                  <textarea rows={2} value={reportComment} onChange={(e) => setReportComment(e.target.value)} placeholder="Дополнительные детали..." />
+                </label>
                 <button className="primary" type="submit" style={{ fontSize: "0.85rem" }}>
                   Отправить жалобу
                 </button>

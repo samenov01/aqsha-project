@@ -14,7 +14,7 @@ async function authMiddleware(req, _res, next) {
 
     const payload = jwt.verify(token, JWT_SECRET);
     const user = await get(
-      "SELECT id, name, email, university, is_verified, balance FROM users WHERE id = ?",
+      "SELECT id, name, email, university, is_verified, balance, skills, role, telegram_chat_id, preferred_microrayon FROM users WHERE id = ?",
       [payload.id]
     );
 
@@ -45,6 +45,10 @@ async function authMiddleware(req, _res, next) {
       balance: user.balance || 0,
       completedOrders,
       rank,
+      skills: user.skills || "",
+      role: user.role || "seeker",
+      telegramChatId: user.telegram_chat_id || "",
+      preferredMicrorayon: user.preferred_microrayon || "",
     };
     next();
   } catch (_error) {

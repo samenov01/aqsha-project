@@ -9,7 +9,7 @@ const walletRouter = Router();
 walletRouter.use(authMiddleware);
 
 walletRouter.get(
-  "/api/wallet",
+  "/wallet",
   asyncHandler(async (req, res) => {
     const user = await get("SELECT balance FROM users WHERE id = ?", [req.user.id]);
     
@@ -32,7 +32,7 @@ walletRouter.get(
 );
 
 walletRouter.post(
-  "/api/wallet/topup",
+  "/wallet/topup",
   asyncHandler(async (req, res) => {
     const amount = Number(req.body.amount);
     if (!amount || amount <= 0 || amount > 1000000) {

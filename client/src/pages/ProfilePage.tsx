@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n";
 import { deleteAd, getMyAds, updateAdStatus } from "../api/ads";
 import { login, register, getFaceIdStatus, registerFaceId, loginWithFaceId } from "../api/auth";
+import { updateProfile } from "../api/profile";
+import { generateTelegramLinkToken, getTelegramStatus, unlinkTelegram } from "../api/telegram";
 import { ApiError } from "../api/client";
 import { FaceCamera } from "../components/FaceCamera";
 import { IconUser, IconWallet, IconCrown, IconAward, IconStar, IconSprout, IconLogOut, IconSun, IconMoon, IconChevronRight, IconCheckCircle } from "../components/icons/Icons";
@@ -13,11 +15,13 @@ import { formatPrice } from "../lib/formatters";
 type ProfilePageProps = {
   user: User | null;
   token: string | null;
+  microrayons?: string[];
   onLogin: (nextUser: User, token: string) => void;
   onLogout: () => void;
+  onUpdateUser?: (updates: Partial<User>) => void;
 };
 
-export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps) {
+export function ProfilePage({ user, token, microrayons = [], onLogin, onLogout, onUpdateUser }: ProfilePageProps) {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -30,6 +34,17 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
   const [showCamera, setShowCamera] = useState<"register" | "login" | null>(null);
 
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+
+  /* Profile editing */
+  const [skills, setSkills] = useState(user?.skills || "");
+  const [role, setRole] = useState<"seeker" | "employer">(user?.role || "seeker");
+  const [preferredMicrorayon, setPreferredMicrorayon] = useState(user?.preferredMicrorayon || "");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  /* Telegram linking */
+  const [telegramLinked, setTelegramLinked] = useState<boolean | null>(null);
+  const [telegramCode, setTelegramCode] = useState<string | null>(null);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     const nextTheme = theme === "light" ? "dark" : "light";
@@ -54,7 +69,20 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
       .then(setMyAds)
       .catch(() => setMyAds([]))
       .finally(() => setIsLoadingAds(false));
+
+    getTelegramStatus(token)
+      .then((data) => setTelegramLinked(data.linked))
+      .catch(() => setTelegramLinked(false));
   }, [token]);
+
+  // Sync local form state when user object updates
+  useEffect(() => {
+    if (user) {
+      setSkills(user.skills || "");
+      setRole(user.role || "seeker");
+      setPreferredMicrorayon(user.preferredMicrorayon || "");
+    }
+  }, [user?.id]);
 
   /* Check face registration status */
   useEffect(() => {
@@ -165,6 +193,48 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
       if (err instanceof ApiError) {
         setError(err.message);
       }
+    }
+  }
+
+  async function handleSaveProfile() {
+    if (!token) return;
+    setIsSavingProfile(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await updateProfile({ skills, role, preferredMicrorayon }, token);
+      onUpdateUser?.(result.user);
+      setMessage("Профиль сохранён ✅");
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  }
+
+  async function handleGenerateTelegramCode() {
+    if (!token) return;
+    setIsGeneratingCode(true);
+    setTelegramCode(null);
+    try {
+      const result = await generateTelegramLinkToken(token);
+      setTelegramCode(result.token);
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  }
+
+  async function handleUnlinkTelegram() {
+    if (!token) return;
+    try {
+      await unlinkTelegram(token);
+      setTelegramLinked(false);
+      setTelegramCode(null);
+      setMessage("Telegram отключён");
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
     }
   }
 
@@ -384,7 +454,140 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
             </button>
           </div>
 
-          {/* 4. My Ads Section */}
+          {/* 4. AI Profile — skills, role, microrayon */}
+          <div className="m3-list-card" style={{ marginTop: "1rem" }}>
+            <div style={{ padding: "1rem 1.25rem 0.5rem", borderBottom: "1px solid var(--md-outline-variant)" }}>
+              <p style={{ fontWeight: 700, fontSize: "1rem", margin: 0 }}>🤖 AI-профиль</p>
+              <p className="muted" style={{ fontSize: "0.82rem", margin: "0.25rem 0 0" }}>
+                Заполните, чтобы AI подбирал вакансии именно для вас
+              </p>
+            </div>
+
+            <div style={{ padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* Role */}
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--md-on-surface-variant)", display: "block", marginBottom: "0.4rem" }}>
+                  Я ищу
+                </label>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  {(["seeker", "employer"] as const).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRole(r)}
+                      style={{
+                        flex: 1,
+                        padding: "0.5rem 0.75rem",
+                        borderRadius: "var(--md-shape-lg)",
+                        border: `2px solid ${role === r ? "var(--md-primary)" : "var(--md-outline-variant)"}`,
+                        background: role === r ? "var(--md-primary-container)" : "transparent",
+                        color: role === r ? "var(--md-on-primary-container)" : "var(--md-on-surface-variant)",
+                        fontWeight: role === r ? 700 : 400,
+                        cursor: "pointer",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      {r === "seeker" ? "Работу (соискатель)" : "Сотрудников (работодатель)"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div className="m3-text-field">
+                <label>Мои навыки (через запятую)</label>
+                <input
+                  type="text"
+                  value={skills}
+                  onChange={(e) => setSkills(e.target.value)}
+                  placeholder="React, JavaScript, касса, общение, вождение..."
+                />
+                <span style={{ fontSize: "0.75rem", color: "var(--md-on-surface-variant)" }}>
+                  Чем точнее — тем лучше AI-подборка
+                </span>
+              </div>
+
+              {/* Preferred Microrayon */}
+              <div className="m3-text-field">
+                <label>Мой район (для поиска рядом)</label>
+                <select value={preferredMicrorayon} onChange={(e) => setPreferredMicrorayon(e.target.value)}>
+                  <option value="">— Любой район —</option>
+                  {(microrayons.length ? microrayons : [
+                    "1 мкр","2 мкр","3 мкр","4 мкр","5 мкр","6 мкр","7 мкр","8 мкр","9 мкр","10 мкр",
+                    "11 мкр","12 мкр","13 мкр","14 мкр","15 мкр","16 мкр","17 мкр","20 мкр","Центр","Жетыбай","Другое",
+                  ]).map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+
+              <button className="primary" type="button" onClick={handleSaveProfile} disabled={isSavingProfile}>
+                {isSavingProfile ? "Сохраняем..." : "Сохранить профиль"}
+              </button>
+            </div>
+          </div>
+
+          {/* 5. Telegram Connect */}
+          <div className="m3-list-card" style={{ marginTop: "1rem" }}>
+            <div style={{ padding: "1rem 1.25rem 0.5rem", borderBottom: "1px solid var(--md-outline-variant)" }}>
+              <p style={{ fontWeight: 700, fontSize: "1rem", margin: 0 }}>
+                ✈️ Telegram-уведомления
+              </p>
+              <p className="muted" style={{ fontSize: "0.82rem", margin: "0.25rem 0 0" }}>
+                Получайте новые вакансии и откликайтесь прямо из Telegram
+              </p>
+            </div>
+            <div style={{ padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {telegramLinked === true && !telegramCode && (
+                <>
+                  <p style={{ color: "var(--md-primary)", fontWeight: 600, margin: 0 }}>✅ Telegram подключён</p>
+                  <button className="ghost small" type="button" onClick={handleUnlinkTelegram}>
+                    Отключить
+                  </button>
+                </>
+              )}
+              {(telegramLinked === false || telegramLinked === null) && !telegramCode && (
+                <button className="primary" type="button" onClick={handleGenerateTelegramCode} disabled={isGeneratingCode}>
+                  {isGeneratingCode ? "Генерируем код..." : "Подключить Telegram"}
+                </button>
+              )}
+              {telegramCode && (
+                <div style={{
+                  background: "var(--md-secondary-container)",
+                  borderRadius: "var(--md-shape-lg)",
+                  padding: "1rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5rem",
+                }}>
+                  <p style={{ margin: 0, fontWeight: 600 }}>Ваш код:</p>
+                  <div style={{
+                    fontSize: "2rem",
+                    fontWeight: 900,
+                    letterSpacing: "0.25em",
+                    color: "var(--md-primary)",
+                    textAlign: "center",
+                    padding: "0.5rem",
+                    background: "var(--md-surface)",
+                    borderRadius: "var(--md-shape-md)",
+                  }}>
+                    {telegramCode}
+                  </div>
+                  <p className="muted" style={{ fontSize: "0.82rem", margin: 0 }}>
+                    Отправьте боту: <strong>/link {telegramCode}</strong>
+                    <br />Код действует 5 минут
+                  </p>
+                  <button
+                    className="ghost small"
+                    type="button"
+                    onClick={() => setTelegramCode(null)}
+                  >
+                    Закрыть
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* My Ads Section */}
           <section style={{ marginTop: "1rem" }}>
             <div className="section-head-row">
               <div>

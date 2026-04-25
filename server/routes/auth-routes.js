@@ -395,6 +395,58 @@ authRouter.post(
   })
 );
 
+// PATCH /auth/me — update current user's skills, role, preferredMicrorayon
+authRouter.patch(
+  "/me",
+  authMiddleware,
+  asyncHandler(async (req, res) => {
+    const sets = [];
+    const params = [];
+
+    const { skills, role, preferredMicrorayon } = req.body;
+
+    if (typeof skills === "string") {
+      sets.push("skills = ?");
+      params.push(skills.slice(0, 500));
+    }
+    if (role === "seeker" || role === "employer") {
+      sets.push("role = ?");
+      params.push(role);
+    }
+    if (typeof preferredMicrorayon === "string") {
+      sets.push("preferred_microrayon = ?");
+      params.push(preferredMicrorayon.slice(0, 64));
+    }
+
+    if (sets.length) {
+      params.push(req.user.id);
+      await run(`UPDATE users SET ${sets.join(", ")} WHERE id = ?`, params);
+    }
+
+    const updated = await get(
+      "SELECT id, name, email, university, is_verified, balance, skills, role, telegram_chat_id, preferred_microrayon FROM users WHERE id = ?",
+      [req.user.id]
+    );
+
+    res.json({
+      ok: true,
+      user: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        university: updated.university,
+        isVerified: Boolean(updated.is_verified),
+        isAdmin: ADMIN_EMAILS.includes(String(updated.email || "").toLowerCase()),
+        balance: updated.balance || 0,
+        skills: updated.skills || "",
+        role: updated.role || "seeker",
+        telegramChatId: updated.telegram_chat_id || "",
+        preferredMicrorayon: updated.preferred_microrayon || "",
+      },
+    });
+  })
+);
+
 module.exports = {
   authRouter,
 };

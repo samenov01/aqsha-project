@@ -14,6 +14,10 @@ export type User = {
   balance?: number;
   rank?: string;
   completedOrders?: number;
+  skills?: string;
+  role?: "seeker" | "employer";
+  telegramChatId?: string;
+  preferredMicrorayon?: string;
 };
 
 export type Ad = {
@@ -24,6 +28,10 @@ export type Ad = {
   university: string;
   description: string;
   status?: "active" | "archived" | "sold";
+  employmentType?: string;
+  experienceLevel?: string;
+  microrayon?: string;
+  skills?: string;
   contacts: Contacts;
   images: string[];
   createdAt?: string;
@@ -32,7 +40,53 @@ export type Ad = {
     name: string;
     university: string;
     verified?: boolean;
+    role?: string;
   };
+};
+
+export type Application = {
+  id: number;
+  jobId: number;
+  coverLetter: string;
+  status: "pending" | "viewed" | "accepted" | "rejected";
+  createdAt: string;
+  applicant?: {
+    id: number;
+    name: string;
+    email: string;
+    skills: string;
+  };
+  job?: {
+    id: number;
+    title: string;
+    category: string;
+    salary: number;
+    microrayon: string;
+    employmentType: string;
+    employerName: string;
+  };
+};
+
+export type AiMatch = {
+  id: number;
+  title: string;
+  category: string;
+  salary: number;
+  employmentType: string;
+  experienceLevel: string;
+  microrayon: string;
+  employerName: string;
+  createdAt: string;
+  matchScore: number;
+  matchReason: string;
+  aiPowered?: boolean;
+};
+
+export type AiMatchResult = {
+  userSkills: string;
+  userMicrorayon?: string;
+  aiPowered?: boolean;
+  matches: AiMatch[];
 };
 
 export type ServiceReview = {
@@ -136,9 +190,11 @@ export type AdChatResponse = {
   messages: AdMessage[];
 };
 
-
 export type MetaResponse = {
   categories: string[];
+  employmentTypes: string[];
+  experienceLevels: string[];
+  microrayons: string[];
   defaultUniversity: string;
 };
 
@@ -180,6 +236,34 @@ export type Report = {
   status: "pending" | "reviewed" | "dismissed";
   createdAt: string;
 };
+
+export type Conversation = {
+  id: number;
+  peer: { id: number; name: string };
+  ad: { id: number; title: string; price: number };
+  lastMessage?: { body: string; createdAt: string; senderId: number } | null;
+  updatedAt?: string;
+  unreadCount?: number;
+};
+
+export type ConversationMessage = {
+  id: number;
+  conversationId: number;
+  senderId: number;
+  senderName: string;
+  body: string;
+  isMine?: boolean;
+  createdAt: string;
+};
+
+export type WorkItem = {
+  id: number;
+  title: string;
+  description: string;
+  imageUrl?: string;
+};
+
+export type PublicUserProfile = PublicProfile;
 
 export type PublicProfile = {
   id: number;

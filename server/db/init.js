@@ -579,12 +579,12 @@ async function seedDemoData() {
   const seekerHash = await bcrypt.hash("Demo12345", 10);
   const seeker = await run(
     `INSERT INTO users (name, email, university, password_hash, is_verified, role, skills) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    ["Алибек Сейткали", "seeker@jumys.kz", DEFAULT_UNIVERSITY, seekerHash, 1, "seeker", "React,JavaScript,Node.js,Python,Git"]
+    ["Азамат Оспанов", "seeker@jumys.kz", DEFAULT_UNIVERSITY, seekerHash, 1, "seeker", "React,JavaScript,Node.js,Python,Git"]
   );
 
   await run(
     `INSERT INTO services (user_id, title, category, price, university, description, contact_telegram) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [seeker.lastID, "Ищу работу: Junior Frontend Developer", CATEGORIES[4], 200000, DEFAULT_UNIVERSITY, "Молодой разработчик, 1 год опыта в React и JavaScript. Ищу стажировку или работу с наставником. Готов к обучению. Портфолио по запросу.", "@alibek_dev"]
+    [seeker.lastID, "Ищу работу: Junior Frontend Developer", CATEGORIES[4], 200000, DEFAULT_UNIVERSITY, "Молодой разработчик, 1 год опыта в React и JavaScript. Ищу стажировку или работу с наставником. Готов к обучению. Портфолио по запросу.", "@azamat_dev"]
   );
 }
 

@@ -79,11 +79,14 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
       .then((data) => {
         if (!isActive) return;
         setAd(data);
-        setMainImage(data.images?.[0] || "");
+        setMainImage(data.images?.[0] || "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=60");
       })
       .catch((err: unknown) => {
-        if (err instanceof ApiError && isActive) {
+        if (!isActive) return;
+        if (err instanceof ApiError) {
           setError(err.message);
+        } else {
+          setError("Не удалось загрузить вакансию. Попробуйте обновить страницу.");
         }
       });
 

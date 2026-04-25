@@ -254,21 +254,6 @@ export function MarketPage({
         {isLoading && <p className="muted">{t("market.loading")}</p>}
         {error && <p className="error-box">{error}</p>}
 
-        {/* DEBUG: plain list to verify rendering */}
-        {visibleAds.length > 0 && (
-          <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", marginBottom: "1rem" }}>
-            {visibleAds.map((ad) => (
-              <div key={ad.id} style={{ background: "#f3f0ff", border: "2px solid #7c3aed", borderRadius: 16, padding: "1rem", cursor: "pointer" }}
-                onClick={() => window.location.href = `/ad/${ad.id}`}>
-                <div style={{ fontWeight: 700, fontSize: "1rem" }}>{ad.title}</div>
-                <div style={{ color: "#7c3aed", fontSize: "0.85rem" }}>{ad.category}</div>
-                <div style={{ fontSize: "0.85rem", marginTop: 4 }}>{ad.price > 0 ? `${ad.price.toLocaleString("ru")} ₸` : "По договорённости"}</div>
-                <div style={{ fontSize: "0.78rem", color: "#666", marginTop: 4 }}>📍 {ad.microrayon || "Актау"}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
         <div className="ad-grid">
           {visibleAds.map((ad) => (
             <AdCard key={ad.id} ad={ad} isFavorite={favorites.has(ad.id)} onToggleFavorite={onToggleFavorite} />

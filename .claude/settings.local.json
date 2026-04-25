@@ -24,7 +24,10 @@
       "Bash(npm install *)",
       "Bash(node --check server/db/client.js)",
       "Bash(node -e \"const {get}=require\\('./server/db/client'\\); get\\('SELECT 1 as ok'\\).then\\(r=>console.log\\('DB OK:',r\\)\\).catch\\(console.error\\).finally\\(\\(\\)=>process.exit\\(0\\)\\);\")",
-      "Bash(node --check \"c:\\\\Users\\\\isera\\\\Documents\\\\нужное все\\\\aqsha\\\\aqsha-project\\\\server\\\\telegram-bot.js\")"
+      "Bash(node --check \"c:\\\\Users\\\\isera\\\\Documents\\\\нужное все\\\\aqsha\\\\aqsha-project\\\\server\\\\telegram-bot.js\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

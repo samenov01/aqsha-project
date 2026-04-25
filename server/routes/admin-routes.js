@@ -20,7 +20,7 @@ const {
 
 const adminRouter = Router();
 
-adminRouter.use(authMiddleware, requireAdmin);
+adminRouter.use("/admin", authMiddleware, requireAdmin);
 
 const CHALLENGE_TTL_MIN = 5;
 let webauthnModule;

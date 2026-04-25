@@ -1,4 +1,4 @@
-﻿const path = require("path");
+const path = require("path");
 const dotenv = require("dotenv");
 
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
@@ -17,9 +17,10 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
-const DATA_DIR = path.join(ROOT_DIR, "data");
+const PERSISTENT_DIR = process.env.RENDER ? path.join(ROOT_DIR, "persistent") : ROOT_DIR;
+const DATA_DIR = path.join(PERSISTENT_DIR, "data");
 const DB_PATH = path.join(DATA_DIR, "aqsha.db");
-const UPLOAD_DIR = path.join(ROOT_DIR, "uploads");
+const UPLOAD_DIR = path.join(PERSISTENT_DIR, "uploads");
 const CLIENT_DIST = path.join(ROOT_DIR, "client", "dist");
 
 const CORS_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173")

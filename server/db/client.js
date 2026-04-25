@@ -1,56 +1,49 @@
-﻿const fs = require("fs");
-const sqlite3 = require("sqlite3").verbose();
+const fs = require("fs");
+const Database = require("better-sqlite3");
 const { DATA_DIR, DB_PATH } = require("../config");
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const db = new sqlite3.Database(DB_PATH);
+const db = new Database(DB_PATH);
+db.pragma("foreign_keys = ON");
+db.pragma("journal_mode = WAL");
 
-db.serialize(() => {
-  db.run("PRAGMA foreign_keys = ON");
-  db.run("PRAGMA journal_mode = WAL");
-});
-
+// Wrap better-sqlite3 (sync) in Promises so all existing async/await code works unchanged
 function run(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function onResult(err) {
-      if (err) reject(err);
-      else resolve(this);
-    });
-  });
+  try {
+    const stmt = db.prepare(sql);
+    const result = stmt.run(params);
+    return Promise.resolve({ lastID: result.lastInsertRowid, changes: result.changes });
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 function all(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+  try {
+    const stmt = db.prepare(sql);
+    return Promise.resolve(stmt.all(params));
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 function get(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
+  try {
+    const stmt = db.prepare(sql);
+    return Promise.resolve(stmt.get(params));
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
 function close() {
-  return new Promise((resolve, reject) => {
-    db.close((err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+  try {
+    db.close();
+    return Promise.resolve();
+  } catch (err) {
+    return Promise.reject(err);
+  }
 }
 
-module.exports = {
-  db,
-  run,
-  all,
-  get,
-  close,
-};
+module.exports = { db, run, all, get, close };

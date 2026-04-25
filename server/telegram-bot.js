@@ -26,12 +26,25 @@ async function tgRequest(method, body) {
   }
 }
 
+const MAIN_KEYBOARD = {
+  reply_markup: {
+    keyboard: [
+      [{ text: "📋 Вакансии" }, { text: "🤖 AI Подбор" }],
+      [{ text: "✅ Откликнуться" }, { text: "👤 Мой профиль" }],
+      [{ text: "ℹ️ Помощь" }],
+    ],
+    resize_keyboard: true,
+    persistent: true,
+  },
+};
+
 async function sendMessage(chatId, text, extra = {}) {
   return tgRequest("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "Markdown",
     disable_web_page_preview: true,
+    ...MAIN_KEYBOARD,
     ...extra,
   });
 }
@@ -318,17 +331,47 @@ async function handleMessage(msg) {
   const chatId = msg.chat.id;
   const text = (msg.text || "").trim();
 
+  // Commands
   if (text.startsWith("/start")) return handleStart(chatId);
   if (text.startsWith("/jobs")) return handleJobs(chatId);
   if (text.startsWith("/match")) return handleMatch(chatId);
   if (text.startsWith("/help")) return handleHelp(chatId);
-
   if (text.startsWith("/link")) {
     const token = text.split(/\s+/)[1]?.trim();
     return handleLink(chatId, token);
   }
 
-  await sendMessage(chatId, `Попробуйте /jobs, /match или /help`);
+  // Reply keyboard buttons
+  if (text === "📋 Вакансии") return handleJobs(chatId);
+  if (text === "🤖 AI Подбор") return handleMatch(chatId);
+  if (text === "ℹ️ Помощь") return handleHelp(chatId);
+
+  if (text === "👤 Мой профиль") {
+    const user = await get("SELECT name, skills, preferred_microrayon FROM users WHERE telegram_chat_id = ?", [String(chatId)]);
+    if (!user) {
+      return sendMessage(chatId,
+        `⚠️ Аккаунт не привязан.\n\nПолучите код на сайте и отправьте:\n\`/link КОД\`\n\n🌐 ${PLATFORM_URL}/profile`
+      );
+    }
+    return sendMessage(chatId,
+      `👤 *${user.name}*\n\n` +
+      `🎯 Навыки: ${user.skills || "не указаны"}\n` +
+      `📍 Район: ${user.preferred_microrayon || "не указан"}\n\n` +
+      `Изменить профиль: ${PLATFORM_URL}/profile`
+    );
+  }
+
+  if (text === "✅ Откликнуться") {
+    const user = await get("SELECT id FROM users WHERE telegram_chat_id = ?", [String(chatId)]);
+    if (!user) {
+      return sendMessage(chatId,
+        `⚠️ Сначала привяжите аккаунт:\n\`/link КОД\`\nКод из профиля: ${PLATFORM_URL}/profile`
+      );
+    }
+    return handleJobs(chatId);
+  }
+
+  await sendMessage(chatId, `Используйте кнопки ниже или команды:\n/jobs — вакансии\n/match — AI подбор\n/help — помощь`);
 }
 
 async function handleCallbackQuery(query) {

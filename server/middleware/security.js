@@ -24,7 +24,7 @@ const corsMiddleware = cors({
 
 const helmetMiddleware = helmet({
   crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: NODE_ENV === "production" ? undefined : false,
+  contentSecurityPolicy: false,
 });
 
 module.exports = {

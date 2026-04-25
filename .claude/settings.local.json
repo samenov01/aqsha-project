@@ -20,7 +20,10 @@
       "Bash(curl -s http://localhost:3000/api/health kill %1)",
       "Bash(taskkill /F /IM node.exe)",
       "Bash(node -e \" const app = require\\('./server/app'\\).createApp\\(\\); app.listen\\(3001, \\(\\) => { const http = require\\('http'\\); http.get\\('http://localhost:3001/', \\(r\\) => { console.log\\('STATUS:', r.statusCode, r.headers['content-type']\\); r.on\\('data', d => process.stdout.write\\(d.toString\\(\\).slice\\(0,200\\)\\)\\); r.on\\('end', \\(\\) => { process.exit\\(0\\); }\\); }\\); }\\); \")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(npm install *)",
+      "Bash(node --check server/db/client.js)",
+      "Bash(node -e \"const {get}=require\\('./server/db/client'\\); get\\('SELECT 1 as ok'\\).then\\(r=>console.log\\('DB OK:',r\\)\\).catch\\(console.error\\).finally\\(\\(\\)=>process.exit\\(0\\)\\);\")"
     ]
   }
 }

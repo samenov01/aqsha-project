@@ -54,7 +54,9 @@ export function MarketPage({
         const items = await getAds({ ...filters, limit: 36 });
         if (isActive) setAds(items);
       } catch (err: unknown) {
-        if (err instanceof ApiError && isActive) setError(err.message);
+        if (isActive) {
+          setError(err instanceof ApiError ? err.message : "Ошибка загрузки. Попробуйте обновить страницу.");
+        }
       } finally {
         if (isActive) setIsLoading(false);
       }

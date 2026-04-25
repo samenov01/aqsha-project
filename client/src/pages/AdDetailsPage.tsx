@@ -30,6 +30,7 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
   const [ad, setAd] = useState<Ad | null>(null);
   const [mainImage, setMainImage] = useState("");
   const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
 
   // Chat state
   const [chatOpen, setChatOpen] = useState(false);
@@ -86,14 +87,14 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
         if (err instanceof ApiError) {
           setError(err.message);
         } else {
-          setError("Не удалось загрузить вакансию. Попробуйте обновить страницу.");
+          setError("Не удалось загрузить вакансию. Проверьте соединение и попробуйте снова.");
         }
       });
 
     return () => {
       isActive = false;
     };
-  }, [params.id]);
+  }, [params.id, retryCount]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -276,9 +277,14 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
     return (
       <section className="section-grid">
         <p className="error-box">{error}</p>
-        <Link to="/market" className="ghost">
-          {t("ad_details.btn.back_market")}
-        </Link>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          <button className="primary" onClick={() => { setError(""); setAd(null); setRetryCount((c) => c + 1); }}>
+            Попробовать снова
+          </button>
+          <Link to="/market" className="ghost">
+            {t("ad_details.btn.back_market")}
+          </Link>
+        </div>
       </section>
     );
   }

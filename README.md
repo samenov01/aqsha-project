@@ -1,82 +1,128 @@
-﻿# aqsha
+# Aqsha — Цифровая платформа занятости Мангистау
 
-Студенческая фриланс-биржа: безопасный backend на Express + SQLite и frontend на React + Vite.
+> MVP для Mangystau Hackathon 2025 · [Demo →](https://aqsha.onrender.com)
 
-## Что изменено
+Aqsha решает реальную проблему: работодатели Актау публикуют вакансии в разрозненных WhatsApp-чатах, а молодёжь не знает о возможностях рядом. Мы заменяем этот хаос единой платформой с AI-матчингом и Telegram-ботом.
 
-- Проект переработан на модульную структуру (`server/*` и `client/src/*`).
-- Удален устаревший легаси-фронт из `public/*`.
-- Усилена безопасность API:
-  - `helmet` для базовых security-заголовков.
-  - `express-rate-limit` для `/api` и отдельный лимит для `/api/auth`.
-  - Строгий `CORS` по списку разрешенных origin.
-  - Централизованный обработчик ошибок.
-  - Валидация полей на сервере (email, пароль, цены, длины строк).
-  - Защищенная загрузка файлов (только JPG/PNG/WEBP, лимит размера и количества).
-  - JWT авторизация через middleware.
+---
 
-## Структура
+## Ключевые возможности
 
-```text
-server/
-  app.js
-  index.js
-  config/
-  constants/
-  db/
-  lib/
-  middleware/
-  routes/
+| | |
+|---|---|
+| 🤖 **AI-матчинг** | Claude AI анализирует навыки соискателя и описание вакансии, выдаёт процент совпадения и объяснение на русском |
+| ✈️ **Telegram-бот** | Уведомления о новых вакансиях, AI-подборка `/match`, отклик в один клик прямо из Telegram |
+| 📍 **Фильтрация по Актау** | 60+ микрорайонов, тип занятости, опыт, зарплатная вилка |
+| 👤 **Полный flow** | Создание вакансии → отклик → уведомление работодателя → принять / отклонить |
+| 🔐 **FaceID / Passkey** | Вход без пароля через биометрию или ключи доступа |
 
-client/src/
-  api/
-  components/
-  lib/
-  pages/
-  App.tsx
-```
+---
 
-## Запуск
+## Стек
+
+**Backend** — Node.js · Express · SQLite  
+**Frontend** — React 19 · TypeScript · Vite  
+**AI** — Anthropic Claude Haiku  
+**Bot** — Telegram Bot API (long-polling, без зависимостей)
+
+---
+
+## Быстрый старт
 
 ```bash
+# Зависимости
 npm install
-npm run dev
+npm install --prefix client
+
+# .env
+cp .env.example .env
+# Заполни ANTHROPIC_API_KEY и TELEGRAM_BOT_TOKEN
+
+# Запуск (два терминала)
+npm run dev          # backend :3000
+npm run client:dev   # frontend :5173
 ```
 
-Frontend отдельно:
+Демо-аккаунты создаются автоматически при первом запуске:
 
-```bash
-npm run client:dev
-```
+| Роль | Email | Пароль |
+|---|---|---|
+| Работодатель | `employer@jumys.kz` | `Demo12345` |
+| Соискатель | `seeker@jumys.kz` | `Demo12345` |
 
-Сборка клиента:
-
-```bash
-npm run client:build
-```
+---
 
 ## Переменные окружения
 
-Поддерживаются:
+```env
+PORT=3000
+JWT_SECRET=your-secret
+ANTHROPIC_API_KEY=sk-ant-...
+TELEGRAM_BOT_TOKEN=...
+PLATFORM_URL=https://your-app.onrender.com
+CORS_ORIGINS=https://your-app.onrender.com
+ADMIN_EMAILS=your@email.com
+```
 
-- `PORT` (по умолчанию `3000`)
-- `JWT_SECRET`
-- `CORS_ORIGINS` (через запятую, например `http://localhost:5173,http://127.0.0.1:5173`)
-- `ADMIN_MFA_SECRET` (секрет для админского FaceID-токена, по умолчанию `JWT_SECRET`)
-- `ADMIN_MFA_TTL_MIN` (время жизни FaceID-токена, по умолчанию `15`)
-- `WEBAUTHN_RP_ID` (домен для WebAuthn, по умолчанию `localhost`)
-- `WEBAUTHN_ORIGIN` (origin фронта для WebAuthn, по умолчанию `http://localhost:5173`)
-- `WEBAUTHN_RP_NAME` (название для WebAuthn, по умолчанию `Aqsha Admin`)
+---
+
+## Telegram-бот — команды
+
+| Команда | Действие |
+|---|---|
+| `/start` | Приветствие и список команд |
+| `/jobs` | Последние 5 вакансий с кнопками отклика |
+| `/match` | AI-подборка по навыкам (нужна привязка аккаунта) |
+| `/link КОД` | Привязать аккаунт платформы (код из профиля) |
+
+---
 
 ## API
 
-- `GET /api/health`
-- `GET /api/meta`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `GET /api/ads`
-- `GET /api/ads/:id`
-- `POST /api/ads`
-- `DELETE /api/ads/:id`
-- `GET /api/my/ads`
+```
+GET    /api/health
+GET    /api/meta                        — категории, районы, типы занятости
+POST   /api/auth/register
+POST   /api/auth/login
+PATCH  /api/auth/me                     — обновить навыки, роль, район
+GET    /api/ads                         — список вакансий с фильтрами
+POST   /api/ads                         — создать вакансию
+GET    /api/ads/:id
+POST   /api/jobs/:id/apply              — откликнуться
+GET    /api/jobs/:id/applications       — отклики на вакансию (работодатель)
+GET    /api/my/applications             — мои отклики (соискатель)
+PATCH  /api/applications/:id/status     — принять / отклонить
+GET    /api/ai/match/jobs               — AI-подборка вакансий для соискателя
+GET    /api/ai/match/candidates/:jobId  — AI-подборка кандидатов для работодателя
+POST   /api/telegram/link-token         — генерация кода привязки Telegram
+```
+
+---
+
+## Деплой на Render.com
+
+1. Подключи репозиторий на [render.com](https://render.com)
+2. **Build:** `npm install && npm install --prefix client && npm run client:build`
+3. **Start:** `npm start`
+4. Добавь переменные окружения в разделе Environment
+5. Deploy ✓
+
+---
+
+## Структура проекта
+
+```
+server/
+  routes/          ai, ads, auth, applications, telegram, ...
+  middleware/       auth, security
+  db/               SQLite init + seed
+  telegram-bot.js   Telegram long-polling бот
+client/src/
+  pages/            MarketPage, AiMatchPage, ProfilePage, ...
+  api/              typed fetch-обёртки
+  components/       AdCard, SiteLayout, ...
+```
+
+---
+
+Mangystau Hackathon · Апрель 2025 · Актау

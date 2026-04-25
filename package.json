@@ -10,6 +10,9 @@
     "client:build": "npm run build --prefix client",
     "lint": "npm run lint --prefix client"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

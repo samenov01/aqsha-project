@@ -1,4 +1,4 @@
-﻿import type { Ad, MetaResponse } from "../types";
+﻿import type { Ad, AiMatchResult, MetaResponse } from "../types";
 import { apiRequest } from "./client";
 
 type AdsQuery = {
@@ -94,6 +94,18 @@ export function createAd(
   return apiRequest<Ad>("/api/ads", {
     method: "POST",
     body: formData,
+    token,
+  });
+}
+
+export function getAiMatchJobs(token: string) {
+  return apiRequest<AiMatchResult>("/api/ai/match", { token });
+}
+
+export function updateSkills(payload: { skills: string; bio: string }, token: string) {
+  return apiRequest<{ ok: boolean }>("/api/auth/me/skills", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
     token,
   });
 }

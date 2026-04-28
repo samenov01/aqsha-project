@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n";
-import { deleteAd, getMyAds, updateAdStatus } from "../api/ads";
+import { deleteAd, getMyAds, updateAdStatus, updateSkills } from "../api/ads";
 import { login, register, getFaceIdStatus, registerFaceId, loginWithFaceId } from "../api/auth";
 import { ApiError } from "../api/client";
 import { FaceCamera } from "../components/FaceCamera";
@@ -28,6 +28,25 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
   /* FaceID state */
   const [faceRegistered, setFaceRegistered] = useState<boolean | null>(null);
   const [showCamera, setShowCamera] = useState<"register" | "login" | null>(null);
+
+  /* Skills / bio state */
+  const [skills, setSkills] = useState("");
+  const [bio, setBio] = useState("");
+  const [skillsSaving, setSkillsSaving] = useState(false);
+
+  async function handleSaveSkills(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setSkillsSaving(true);
+    try {
+      await updateSkills({ skills, bio }, token);
+      setMessage("Навыки сохранены");
+    } catch {
+      setError("Не удалось сохранить навыки");
+    } finally {
+      setSkillsSaving(false);
+    }
+  }
 
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
 
@@ -323,6 +342,47 @@ export function ProfilePage({ user, token, onLogin, onLogout }: ProfilePageProps
                 <span className="value">{user.completedOrders}</span>
               </div>
             )}
+          </div>
+
+          {/* AI Skills Card */}
+          <div className="m3-list-card" style={{ padding: "1.25rem 1.5rem" }}>
+            <p style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "0.75rem" }}>🤖 Навыки для AI-подбора вакансий</p>
+            <form onSubmit={handleSaveSkills}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div>
+                  <label style={{ fontSize: "0.8rem", color: "var(--md-on-surface-variant)", marginBottom: "0.25rem", display: "block" }}>
+                    Навыки (через запятую)
+                  </label>
+                  <input
+                    type="text"
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                    placeholder="Python, дизайн, Excel, сварка..."
+                    style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "var(--md-shape-md)", border: "1px solid var(--md-outline-variant)", background: "var(--md-surface-container)", color: "var(--md-on-surface)", fontSize: "0.9rem", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.8rem", color: "var(--md-on-surface-variant)", marginBottom: "0.25rem", display: "block" }}>
+                    О себе (опционально)
+                  </label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Студент 3 курса, ищу подработку..."
+                    rows={2}
+                    style={{ width: "100%", padding: "0.6rem 0.75rem", borderRadius: "var(--md-shape-md)", border: "1px solid var(--md-outline-variant)", background: "var(--md-surface-container)", color: "var(--md-on-surface)", fontSize: "0.9rem", resize: "vertical", boxSizing: "border-box" }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="primary"
+                  disabled={skillsSaving}
+                  style={{ alignSelf: "flex-start" }}
+                >
+                  {skillsSaving ? "Сохранение..." : "Сохранить навыки"}
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* 3. M3 Settings List Card */}

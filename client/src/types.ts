@@ -181,6 +181,24 @@ export type Report = {
   createdAt: string;
 };
 
+export type AiMatch = {
+  id: number;
+  title: string;
+  category: string;
+  salary: number;
+  employerName: string;
+  createdAt: string;
+  matchScore: number;
+  matchReason: string;
+  microrayon?: string;
+  employmentType?: string;
+};
+
+export type AiMatchResult = {
+  userSkills: string | null;
+  matches: AiMatch[];
+};
+
 export type PublicProfile = {
   id: number;
   name: string;

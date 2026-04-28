@@ -27,6 +27,18 @@ async function initDb() {
     // Column already exists.
   }
 
+  try {
+    await run("ALTER TABLE users ADD COLUMN skills TEXT NOT NULL DEFAULT ''");
+  } catch (_error) {
+    // Column already exists.
+  }
+
+  try {
+    await run("ALTER TABLE users ADD COLUMN bio TEXT NOT NULL DEFAULT ''");
+  } catch (_error) {
+    // Column already exists.
+  }
+
   await run(
     `CREATE TABLE IF NOT EXISTS webauthn_credentials (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

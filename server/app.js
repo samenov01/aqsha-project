@@ -15,6 +15,7 @@ const { reportsRouter } = require("./routes/reports-routes");
 const { favoritesRouter } = require("./routes/favorites-routes");
 const { profileRouter } = require("./routes/profile-routes");
 const { newsRouter } = require("./routes/news-routes");
+const { aiRouter } = require("./routes/ai-routes");
 const { errorHandler, notFoundHandler } = require("./middleware/error-handler");
 const {
   apiLimiter,
@@ -60,6 +61,7 @@ function createApp() {
   app.use("/api", favoritesRouter);
   app.use("/api", profileRouter);
   app.use("/api", newsRouter);
+  app.use("/api", aiRouter);
 
   if (fs.existsSync(CLIENT_DIST)) {
     app.use(express.static(CLIENT_DIST));

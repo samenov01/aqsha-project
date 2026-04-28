@@ -22,6 +22,10 @@ import { WalletPage } from "./pages/WalletPage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { NewsPage } from "./pages/NewsPage";
+import { AiMatchPage } from "./pages/AiMatchPage";
+import { ApplicationsPage } from "./pages/ApplicationsPage";
+import { DialogsPage } from "./pages/DialogsPage";
+import { FreelancerProfilePage } from "./pages/FreelancerProfilePage";
 import type { Ad, User } from "./types";
 import { I18nProvider } from "./i18n";
 
@@ -168,6 +172,10 @@ export default function App() {
           <Route path="/users/:id" element={<PublicProfilePage />} />
           <Route path="/favorites" element={<FavoritesPage token={token} />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/ai-match" element={<AiMatchPage token={token} />} />
+          <Route path="/applications" element={<ApplicationsPage token={token} />} />
+          <Route path="/dialogs" element={<DialogsPage token={token} user={user} />} />
+          <Route path="/freelancer/:id" element={<FreelancerProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </SiteLayout>

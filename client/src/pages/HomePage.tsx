@@ -63,6 +63,25 @@ export function HomePage({ ads }: HomePageProps) {
         </div>
       </section>
 
+      <section className="landing-split" id="ai">
+        <div>
+          <p style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--md-primary)", marginBottom: "0.5rem" }}>
+            🤖 ИИ на aqsha.
+          </p>
+          <h2 style={{ marginBottom: "1rem" }}>Умный подбор вакансий</h2>
+          <p style={{ marginBottom: "0.75rem", lineHeight: 1.6 }}>
+            Укажите свои навыки в профиле — и Claude AI проанализирует все активные вакансии на платформе. Для каждой вакансии ИИ рассчитывает процент совместимости и объясняет, почему она подходит именно вам.
+          </p>
+          <p style={{ marginBottom: "1.25rem", lineHeight: 1.6, color: "var(--md-on-surface-variant)" }}>
+            Не нужно просматривать десятки объявлений вручную — ИИ сортирует их по релевантности и показывает только подходящие.
+          </p>
+          <Link to="/ai-match" className="landing-btn landing-btn-green">
+            Попробовать AI Подбор →
+          </Link>
+        </div>
+        <div className="landing-texture" aria-hidden="true" style={{ background: "linear-gradient(135deg, var(--md-primary-container) 0%, var(--md-secondary-container) 100%)" }} />
+      </section>
+
       <footer className="landing-footer">
         <div className="landing-footer-brand">
           <strong>aqsha.</strong>

@@ -73,6 +73,7 @@ export function SiteLayout({ children, user, favoritesCount, notificationsCount 
           </NavLink>
           <NavLink to="/favorites">Избранное</NavLink>
           <NavLink to="/news">Жаңалықтар</NavLink>
+          <NavLink to="/ai-match">AI Подбор</NavLink>
           {user?.isAdmin && <NavLink to="/admin/ads">{t("nav.admin")}</NavLink>}
         </nav>
 

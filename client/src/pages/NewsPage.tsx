@@ -22,9 +22,9 @@ export function NewsPage() {
   return (
     <section className="section-grid">
       <div>
-        <p className="eyebrow">Маңғыстауская область · Актау</p>
+        <p className="eyebrow">Мангистауская область · Актау</p>
         <h1>Жаңалықтар</h1>
-        <p className="muted">Новости региона и рынка труда Маңғыстауской области</p>
+        <p className="muted">Новости региона и рынка труда Мангистауской области</p>
       </div>
 
       {loading && <p className="muted">Загрузка новостей...</p>}
@@ -58,7 +58,7 @@ export function NewsPage() {
 
       {!loading && (
         <p className="muted" style={{ fontSize: "0.8rem", marginTop: "1rem" }}>
-          Платформа aqsha — Актау, Маңғыстауская область
+          Платформа aqsha — Актау, Мангистауская область
         </p>
       )}
     </section>

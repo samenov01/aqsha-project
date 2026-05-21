@@ -29,7 +29,7 @@ export const ru = {
   "theme.appearance": "Оформление",
 
   // HomePage
-  "home.hero.title": "Работа в Маңғыстау — одним нажатием.",
+  "home.hero.title": "Работа в Мангистау — одним нажатием.",
   "home.hero.subtitle": "Цифровая платформа занятости для молодёжи и малого бизнеса Актау. AI-матчинг, реальные вакансии, быстрый отклик.",
   "home.hero.cta": "Найти работу",
   "home.hero.post": "Разместить вакансию",
@@ -47,7 +47,7 @@ export const ru = {
   "home.employers.title": "Для работодателей",
   "home.employers.subtitle": "Разместите вакансию за 2 минуты. AI подберёт лучших кандидатов — из кафе, мастерских, IT-компаний и строительных бригад Актау.",
   "home.employers.cta": "Разместить вакансию",
-  "home.footer.desc": "Цифровая платформа занятости\nдля молодёжи и малого бизнеса Маңғыстауской области.",
+  "home.footer.desc": "Цифровая платформа занятости\nдля молодёжи и малого бизнеса Мангистауской области.",
   "home.footer.service": "Платформа",
   "home.footer.service.home": "Главная",
   "home.footer.service.publish": "Разместить вакансию",
@@ -101,7 +101,7 @@ export const ru = {
   "facecamera.login.title": "Войти",
 
   // MarketPage (Вакансии)
-  "market.title": "Вакансии Маңғыстауской области",
+  "market.title": "Вакансии Мангистауской области",
   "market.eyebrow": "Найти работу",
   "market.reset": "Сбросить фильтры",
   "market.show_all": "Показывать все",
@@ -163,7 +163,7 @@ export const ru = {
 
   // ServicesPage (Соискатели)
   "services.eyebrow": "Соискатели",
-  "services.title": "Активные соискатели Маңғыстау",
+  "services.title": "Активные соискатели Мангистау",
   "services.create_btn": "Создать анкету",
   "services.login_btn": "Войти, чтобы создать анкету",
   "services.search.placeholder": "Имя, навык, должность...",

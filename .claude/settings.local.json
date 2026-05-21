@@ -27,7 +27,14 @@
       "Bash(node --check \"c:\\\\Users\\\\isera\\\\Documents\\\\нужное все\\\\aqsha\\\\aqsha-project\\\\server\\\\telegram-bot.js\")",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "mcp__designmd__search_design_kits",
+      "WebFetch(domain:m3.material.io)",
+      "WebSearch",
+      "Bash(npx tsc *)",
+      "Bash(Get-Content \"C:\\\\Users\\\\isera\\\\Documents\\\\нужное все\\\\aqsha\\\\aqsha-project\\\\client\\\\src\\\\components\\\\layout\\\\SiteLayout.tsx\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\isera\\\\Documents\\\\нужное все\\\\aqsha\\\\aqsha-project\\\\client\\\\src\\\\pages\\\\NotificationsPage.tsx\")",
+      "Bash(git checkout *)"
     ]
   }
 }

@@ -52,7 +52,7 @@ export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
       aria-label={ad.title}
     >
       {/* Image — classic padding-bottom aspect-ratio trick, works everywhere */}
-      <div style={{ position: "relative", width: "100%", paddingBottom: "62.5%", overflow: "hidden", background: "#ede9fe" }}>
+      <div style={{ position: "relative", width: "100%", paddingBottom: "62.5%", overflow: "hidden", background: "#BBEED4" }}>
         <img
           src={imgSrc}
           alt={ad.title}
@@ -73,8 +73,8 @@ export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
           aria-label={isFavorite ? t("ad_card.remove_fav") : t("ad_card.add_fav")}
         >
           <svg viewBox="0 0 24 24" width="16" height="16"
-            fill={isFavorite ? "#7c3aed" : "none"}
-            stroke={isFavorite ? "#7c3aed" : "#888"}
+            fill={isFavorite ? "#2E7D5A" : "none"}
+            stroke={isFavorite ? "#2E7D5A" : "#888"}
             strokeWidth="2" aria-hidden="true">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6.01 4.01 4 6.5 4c1.74 0 3.41.81 4.5 2.09C12.09 4.81 13.76 4 15.5 4 17.99 4 20 6.01 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
           </svg>
@@ -83,7 +83,7 @@ export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
         {ad.user?.verified && (
           <span style={{
             position: "absolute", bottom: 8, left: 8,
-            background: "#7c3aed", color: "#fff",
+            background: "#2E7D5A", color: "#fff",
             fontSize: "0.68rem", fontWeight: 600,
             padding: "0.15rem 0.6rem", borderRadius: "20px",
           }}>{t("ad_card.verified")}</span>
@@ -105,7 +105,7 @@ export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
       <div style={{ padding: "1rem 1.25rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
         <span style={{
           display: "inline-block", fontSize: "0.75rem", fontWeight: 500,
-          background: "#ede9fe", color: "#5b21b6",
+          background: "#BBEED4", color: "#002114",
           padding: "3px 10px", borderRadius: "20px", width: "fit-content",
         }}>{ad.category}</span>
 
@@ -124,7 +124,7 @@ export function AdCard({ ad, isFavorite, onToggleFavorite }: AdCardProps) {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           borderTop: "1px solid rgba(0,0,0,0.07)", flexWrap: "wrap", gap: "0.4rem",
         }}>
-          <span style={{ fontSize: "1rem", fontWeight: 700, color: "#7c3aed", letterSpacing: "-0.01em" }}>
+          <span style={{ fontSize: "1rem", fontWeight: 700, color: "#2E7D5A", letterSpacing: "-0.01em" }}>
             {ad.price > 0 ? `${formatPrice(ad.price)}/мес` : t("ad_card.negotiable")}
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>

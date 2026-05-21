@@ -16,7 +16,7 @@ export function HomePage({ ads }: HomePageProps) {
       <section className="landing-hero">
         <div className="landing-copy">
           <p className="eyebrow" style={{ marginBottom: "1rem" }}>
-            Мангистауская область · Актау
+            Маңғыстауская область · Актау
           </p>
           <h1>{t("home.hero.title")}</h1>
           <p style={{ marginTop: "1.25rem" }}>{t("home.hero.subtitle")}</p>

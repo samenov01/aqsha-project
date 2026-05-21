@@ -72,7 +72,7 @@ export function AiMatchPage({ token }: AiMatchPageProps) {
             Войдите, чтобы получить AI-рекомендации
           </p>
           <p className="muted" style={{ marginBottom: "1.5rem" }}>
-            Укажите навыки в профиле — AI автоматически подберёт вакансии Мангистау, подходящие именно вам.
+            Укажите навыки в профиле — AI автоматически подберёт вакансии Маңғыстау, подходящие именно вам.
           </p>
           <Link to="/profile" className="primary">Войти / Зарегистрироваться</Link>
         </div>

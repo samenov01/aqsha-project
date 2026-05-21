@@ -22,16 +22,16 @@ export function NewsPage() {
   return (
     <section className="section-grid">
       <div>
-        <p className="eyebrow">Yessenov University</p>
+        <p className="eyebrow">Мангистауская область · Актау</p>
         <h1>Жаңалықтар</h1>
-        <p className="muted">Новости университета с официального сайта yu.edu.kz</p>
+        <p className="muted">Новости региона и рынка труда Мангистауской области</p>
       </div>
 
       {loading && <p className="muted">Загрузка новостей...</p>}
       {error && <p className="error-box">{error}</p>}
 
       {!loading && !error && items.length === 0 && (
-        <p className="muted">Новости временно недоступны. Посетите сайт напрямую: yu.edu.kz</p>
+        <p className="muted">Новости временно недоступны. Следите за обновлениями платформы.</p>
       )}
 
       <div className="news-list">
@@ -58,10 +58,7 @@ export function NewsPage() {
 
       {!loading && (
         <p className="muted" style={{ fontSize: "0.8rem", marginTop: "1rem" }}>
-          Источник:{" "}
-          <a href="https://yu.edu.kz" target="_blank" rel="noopener noreferrer">
-            yu.edu.kz
-          </a>
+          Платформа aqsha — Актау, Мангистауская область
         </p>
       )}
     </section>

@@ -51,8 +51,8 @@ export function SiteLayout({ children, user, favoritesCount: _favoritesCount, no
       <header className="topbar topbar-glass">
         {/* Brand */}
         <Link to="/" className="brand-text">
-          <img src="/aqsha.png" alt="JumysAI" className="brand-logo" />
-          <span className="brand-logo-text">JumysAI.</span>
+          <img src="/aqsha.png" alt="aqsha" className="brand-logo" />
+          <span className="brand-logo-text">aqsha.</span>
         </Link>
 
         {/* Navigation tabs */}

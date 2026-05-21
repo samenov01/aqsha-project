@@ -166,7 +166,7 @@ export function HomePage({ ads }: HomePageProps) {
       {/* ── Footer ───────────────────────────────────────────────── */}
       <footer className="landing-footer">
         <div className="landing-footer-brand">
-          <strong>JumysAI.</strong>
+          <strong>aqsha.</strong>
           <p style={{ whiteSpace: "pre-line", marginTop: "0.25rem" }}>
             {t("home.footer.desc")}
           </p>

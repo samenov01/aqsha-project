@@ -88,7 +88,7 @@ export function ServicesPage({ categories, token }: ServicesPageProps) {
 
         <div className="market-block-stack">
           <div className="market-block search-block">
-            <div className="search-bar" role="group" aria-label="Поиск и университет">
+            <div className="search-bar" role="group" aria-label="Поиск">
               <svg className="search-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="11" cy="11" r="7.5" strokeWidth="2" fill="none" />
                 <path d="M20 20l-3.6-3.6" strokeWidth="2" fill="none" />
@@ -105,10 +105,10 @@ export function ServicesPage({ categories, token }: ServicesPageProps) {
               <select
                 className="search-university-select"
                 disabled
-                value="Есенов"
-                aria-label="Университет"
+                value="Актау"
+                aria-label="Город"
               >
-                <option value="Есенов">Есенов</option>
+                <option value="Актау">Актау</option>
               </select>
             </div>
           </div>

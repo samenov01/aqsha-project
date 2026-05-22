@@ -18,7 +18,6 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { AdDetailsPage } from "./pages/AdDetailsPage";
 import { ServiceEditPage } from "./pages/ServiceEditPage";
 import { AdminAdsPage } from "./pages/AdminAdsPage";
-import { WalletPage } from "./pages/WalletPage";
 import { PublicProfilePage } from "./pages/PublicProfilePage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { NewsPage } from "./pages/NewsPage";
@@ -184,10 +183,6 @@ export default function App() {
           <Route path="/orders" element={<OrdersPage token={token} />} />
           <Route path="/orders/:id" element={<OrderDetailsPage token={token} user={user} />} />
           <Route path="/notifications" element={<NotificationsPage token={token} onRefresh={refreshNotifications} />} />
-          <Route
-            path="/wallet"
-            element={<WalletPage token={token} user={user} updateUser={(updates) => setUser((prev) => (prev ? { ...prev, ...updates } : null))} />}
-          />
           <Route path="/admin/ads" element={<AdminAdsPage token={token} user={user} />} />
           <Route
             path="/publish"

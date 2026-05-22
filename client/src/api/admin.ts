@@ -38,3 +38,11 @@ export function approveAdminOrder(orderId: number, token: string) {
     token,
   });
 }
+
+export function changeAdminOrderStatus(orderId: number, status: string, token: string) {
+  return apiRequest<{ ok: boolean; status: string }>(`/api/admin/orders/${orderId}/status`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify({ status }),
+  });
+}

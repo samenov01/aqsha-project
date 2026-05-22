@@ -10,7 +10,6 @@ const { ordersRouter } = require("./routes/orders-routes");
 const { notificationsRouter } = require("./routes/notifications-routes");
 const { adminRouter } = require("./routes/admin-routes");
 const { streamRouter } = require("./routes/stream-routes");
-const { walletRouter } = require("./routes/wallet-routes");
 const { reportsRouter } = require("./routes/reports-routes");
 const { favoritesRouter } = require("./routes/favorites-routes");
 const { profileRouter } = require("./routes/profile-routes");
@@ -58,7 +57,6 @@ function createApp() {
   app.use("/api", notificationsRouter);
   app.use("/api", adminRouter);
   app.use("/api", streamRouter);
-  app.use("/api", walletRouter);
   app.use("/api", reportsRouter);
   app.use("/api", favoritesRouter);
   app.use("/api", profileRouter);

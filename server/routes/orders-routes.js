@@ -468,21 +468,6 @@ ordersRouter.patch(
       throw badRequest("Оплата уже подтверждена");
     }
 
-    const user = await get("SELECT balance FROM users WHERE id = ?", [req.user.id]);
-    const price = Number(row.service_price) || 0;
-
-    if (price > 0 && user.balance < price) {
-      throw badRequest("Недостаточно средств на балансе");
-    }
-
-    if (price > 0) {
-      await run("UPDATE users SET balance = balance - ? WHERE id = ?", [price, req.user.id]);
-      await run(
-        "INSERT INTO transactions (user_id, amount, type, description) VALUES (?, ?, 'expense', ?)",
-        [req.user.id, price, `Резерв средств по заказу #${orderId}`]
-      );
-    }
-
     await run(
       "UPDATE service_orders SET payment_status = ?, payment_paid_at = CURRENT_TIMESTAMP WHERE id = ?",
       [status, orderId]

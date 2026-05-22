@@ -14,7 +14,6 @@ export const kk = {
   "nav.market": "Жұмыс іздеу",
   "nav.services": "Орындаушылар",
   "nav.orders": "Тапсырыстар",
-  "nav.wallet": "Әмиян",
   "nav.notifications": "Хабарламалар",
   "nav.admin": "Админ",
   "nav.profile": "Профиль",
@@ -226,18 +225,6 @@ export const kk = {
   "order.review.my_title": "Бағалағаныңыз үшін рахмет",
   "order.review.my_rating": "Баға: {rating}",
 
-  // WalletPage
-  "wallet.auth_warning": "Аккаунтқа кіріңіз.",
-  "wallet.eyebrow": "Қаржы",
-  "wallet.title": "{name} әмияны",
-  "wallet.loading": "Әмиян жүктелуде...",
-  "wallet.balance": "Ағымдағы теңгерім",
-  "wallet.topup.label": "Толықтыру сомасы (Тест)",
-  "wallet.topup.placeholder": "10000",
-  "wallet.topup.btn": "Толықтыру",
-  "wallet.topup.btn_loading": "Өңделуде...",
-  "wallet.history.title": "Транзакциялар тарихы",
-  "wallet.history.empty": "Транзакциялар әзірге жоқ",
 
   // NotificationsPage
   "notifications.auth_warning": "Хабарландыруларды көру үшін аккаунтқа кіріңіз.",

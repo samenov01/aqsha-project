@@ -454,45 +454,62 @@ adminRouter.post(
     const { createNotification } = require("../lib/notifications");
     const { checkAndAwardBadges } = require("../lib/badges");
 
-    const COMMISSION_RATE = 0.10; // 10%
-    const price = Number(order.price) || 0;
-    const commissionAmount = Math.round(price * COMMISSION_RATE);
-    const providerAmount = price - commissionAmount;
-
-    // 1. Mark complete + record commission
     await run(
-      "UPDATE service_orders SET status = 'completed', commission_amount = ? WHERE id = ?",
-      [commissionAmount, order.id]
+      "UPDATE service_orders SET status = 'completed' WHERE id = ?",
+      [order.id]
     );
 
-    // 2. Credit provider (after commission)
-    if (providerAmount > 0) {
-      await run("UPDATE users SET balance = balance + ? WHERE id = ?", [providerAmount, order.provider_id]);
-      await run(
-        "INSERT INTO transactions (user_id, amount, type, description) VALUES (?, ?, 'income', ?)",
-        [
-          order.provider_id,
-          providerAmount,
-          commissionAmount > 0
-            ? `Оплата за заказ #${order.id} (комиссия ${commissionAmount} ₸)`
-            : `Оплата за заказ #${order.id}`,
-        ]
-      );
-    }
-
-    // 3. Notify provider
     await createNotification(
       order.provider_id,
       "order",
-      "Оплата зачислена!",
-      `Заказ #${order.id} одобрен. Зачислено ${providerAmount} ₸${commissionAmount > 0 ? ` (комиссия платформы ${commissionAmount} ₸)` : ""}.`,
-      `/wallet`
+      "Заказ одобрен!",
+      `Заказ #${order.id} успешно одобрен и завершён.`
     );
 
-    // 4. Award badges
     checkAndAwardBadges(order.provider_id).catch(() => {});
 
-    res.json({ ok: true, providerAmount, commissionAmount });
+    res.json({ ok: true });
+  })
+);
+
+adminRouter.patch(
+  "/admin/orders/:id/status",
+  asyncHandler(async (req, res) => {
+    const orderId = parsePositiveInt(req.params.id, "id");
+    const { status } = req.body;
+    const allowed = ["pending", "accepted", "frozen", "under_review", "completed", "cancelled"];
+    if (!allowed.includes(status)) throw badRequest("Некорректный статус");
+
+    const order = await get("SELECT id, status, provider_id, client_id FROM service_orders WHERE id = ?", [orderId]);
+    if (!order) throw notFound("Заказ не найден");
+
+    const { createNotification } = require("../lib/notifications");
+
+    await run(
+      "UPDATE service_orders SET status = ? WHERE id = ?",
+      [status, orderId]
+    );
+
+    const statusLabels = {
+      pending: "Ожидает принятия",
+      accepted: "Принят в работу",
+      frozen: "Заморожен",
+      under_review: "На проверке",
+      completed: "Завершён",
+      cancelled: "Отменён",
+    };
+
+    const label = statusLabels[status] || status;
+
+    await createNotification(order.provider_id, "order", `Статус заказа изменён`, `Заказ #${orderId}: ${label}.`);
+    await createNotification(order.client_id, "order", `Статус заказа изменён`, `Заказ #${orderId}: ${label}.`);
+
+    if (status === "completed") {
+      const { checkAndAwardBadges } = require("../lib/badges");
+      checkAndAwardBadges(order.provider_id).catch(() => {});
+    }
+
+    res.json({ ok: true, status });
   })
 );
 

@@ -299,7 +299,8 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
 
   return (
     <section className="ad-details">
-      <div className="ad-details-media">
+      {/* LEFT — main content */}
+      <div className="ad-details-main">
         <img src={mainImage} alt={ad.title} className="main-ad-image" />
         <div className="thumb-row">
           {ad.images.map((image) => (
@@ -313,48 +314,46 @@ export function AdDetailsPage({ favorites, onToggleFavorite, token, user }: AdDe
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="ad-details-info">
-        <div className="badge-row">
-          <span className="pill">{ad.category}</span>
-          {ad.status && ad.status !== "active" && (
-            <span className={`status-chip status-${ad.status}`}>{ad.status === "sold" ? t("ad_details.status.sold") : t("ad_details.status.archived")}</span>
+        {/* Description block */}
+        <div className="ad-details-desc">
+          <div className="badge-row">
+            <span className="pill">{ad.category}</span>
+            {ad.status && ad.status !== "active" && (
+              <span className={`status-chip status-${ad.status}`}>{ad.status === "sold" ? t("ad_details.status.sold") : t("ad_details.status.archived")}</span>
+            )}
+          </div>
+          <h1>{ad.title}</h1>
+          <p style={{ whiteSpace: "pre-line", lineHeight: 1.7 }}>{ad.description}</p>
+
+          {(ad.employmentType || ad.experienceLevel || ad.microrayon) && (
+            <div className="job-meta-badges">
+              {ad.employmentType && <span className="job-meta-badge type">💼 {ad.employmentType}</span>}
+              {ad.experienceLevel && <span className="job-meta-badge exp">🎯 Опыт: {ad.experienceLevel}</span>}
+              {ad.microrayon && <span className="job-meta-badge place">📍 {ad.microrayon}</span>}
+            </div>
+          )}
+
+          {ad.skills && (
+            <div className="skills-section">
+              <span className="skills-label">Требуемые навыки</span>
+              <div className="skills-tags">
+                {ad.skills.split(",").map((s) => s.trim()).filter(Boolean).map((skill) => (
+                  <span key={skill} className="skill-tag">{skill}</span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-        <h1>{ad.title}</h1>
-        <p className="price big">{formatPrice(ad.price)}</p>
+      </div>
+
+      {/* RIGHT — sticky sidebar */}
+      <div className="ad-details-info">
+        <p className="price big" style={{ margin: 0 }}>{formatPrice(ad.price)}</p>
         <div className="owner-row">
           <p className="muted">{ad.user?.name}</p>
           {ad.user?.verified && <span className="verified-badge small">{t("ad_details.verified")}</span>}
         </div>
-        <p>{ad.description}</p>
-
-        {/* Job meta badges */}
-        {(ad.employmentType || ad.experienceLevel || ad.microrayon) && (
-          <div className="job-meta-badges">
-            {ad.employmentType && (
-              <span className="job-meta-badge type">💼 {ad.employmentType}</span>
-            )}
-            {ad.experienceLevel && (
-              <span className="job-meta-badge exp">🎯 Опыт: {ad.experienceLevel}</span>
-            )}
-            {ad.microrayon && (
-              <span className="job-meta-badge place">📍 {ad.microrayon}</span>
-            )}
-          </div>
-        )}
-
-        {ad.skills && (
-          <div className="skills-section">
-            <span className="skills-label">Требуемые навыки</span>
-            <div className="skills-tags">
-              {ad.skills.split(",").map((s) => s.trim()).filter(Boolean).map((skill) => (
-                <span key={skill} className="skill-tag">{skill}</span>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="contacts-grid">
           {ad.contacts.phone && <span className="contact-item">{t("ad_details.contacts.phone")}{ad.contacts.phone}</span>}

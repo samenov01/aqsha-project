@@ -69,24 +69,24 @@ export function PublishPage({
     setImageError("");
   };
 
-  const handleDragEnter = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     dragCounter.current += 1;
     setIsDragging(true);
   };
 
-  const handleDragOver = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
   };
 
-  const handleDragLeave = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     dragCounter.current -= 1;
     if (dragCounter.current <= 0) setIsDragging(false);
   };
 
-  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     dragCounter.current = 0;
     setIsDragging(false);
@@ -289,7 +289,7 @@ export function PublishPage({
         </div>
 
         {/* Фото */}
-        <label
+        <div
           className="input-wrap"
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
@@ -350,7 +350,7 @@ export function PublishPage({
               ))
             )}
           </div>
-        </label>
+        </div>
 
         {imageError && <p className="error-box">{imageError}</p>}
         {error && <p className="error-box">{error}</p>}

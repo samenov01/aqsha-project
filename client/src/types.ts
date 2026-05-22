@@ -11,7 +11,6 @@ export type User = {
   university: string;
   isVerified?: boolean;
   isAdmin?: boolean;
-  balance?: number;
   rank?: string;
   completedOrders?: number;
   skills?: string;
@@ -123,7 +122,7 @@ export type Service = {
   };
 };
 
-export type OrderStatus = "pending" | "accepted" | "frozen" | "under_review" | "completed";
+export type OrderStatus = "pending" | "accepted" | "frozen" | "under_review" | "completed" | "cancelled";
 
 export type ServiceOrder = {
   id: number;

@@ -108,18 +108,18 @@ export function ServicePublishPage({ token, categories, defaultUniversity }: Ser
     setImageError("");
   };
 
-  const handleDragEnter = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     dragCounter.current += 1;
     setIsDragging(true);
   };
 
-  const handleDragOver = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
   };
 
-  const handleDragLeave = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     dragCounter.current -= 1;
     if (dragCounter.current <= 0) {
@@ -127,7 +127,7 @@ export function ServicePublishPage({ token, categories, defaultUniversity }: Ser
     }
   };
 
-  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     dragCounter.current = 0;
     setIsDragging(false);
@@ -238,13 +238,14 @@ export function ServicePublishPage({ token, categories, defaultUniversity }: Ser
           </label>
         </div>
 
-        <label
+        <div
           className="input-wrap"
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
+          <span>{t("publish.form.images.upload", { count: images.length, max: maxImages })}</span>
           <input
             ref={fileInputRef}
             type="file"
@@ -393,7 +394,7 @@ export function ServicePublishPage({ token, categories, defaultUniversity }: Ser
               </div>
             )}
           </div>
-        </label>
+        </div>
 
         {imageError && <p className="error-box">{imageError}</p>}
 

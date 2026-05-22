@@ -160,7 +160,7 @@ export function ServiceDetailsPage({ token, user }: ServiceDetailsPageProps) {
 
         <div className="service-profile-about">
           <h2>{t("service_details.about")}</h2>
-          <p>{service.description}</p>
+          <p style={{ whiteSpace: "pre-line" }}>{service.description}</p>
         </div>
       </div>
 

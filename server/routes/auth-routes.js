@@ -424,7 +424,7 @@ authRouter.patch(
     }
 
     const updated = await get(
-      "SELECT id, name, email, university, is_verified, balance, skills, role, telegram_chat_id, preferred_microrayon FROM users WHERE id = ?",
+      "SELECT id, name, email, university, is_verified, skills, role, telegram_chat_id, preferred_microrayon FROM users WHERE id = ?",
       [req.user.id]
     );
 
@@ -437,7 +437,6 @@ authRouter.patch(
         university: updated.university,
         isVerified: Boolean(updated.is_verified),
         isAdmin: ADMIN_EMAILS.includes(String(updated.email || "").toLowerCase()),
-        balance: updated.balance || 0,
         skills: updated.skills || "",
         role: updated.role || "seeker",
         telegramChatId: updated.telegram_chat_id || "",

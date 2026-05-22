@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
 import { useTranslation } from "../i18n";
 import { deleteAd, getMyAds, updateAdStatus } from "../api/ads";
 import { login, register, getFaceIdStatus, registerFaceId, loginWithFaceId } from "../api/auth";
@@ -8,7 +7,7 @@ import { updateProfile } from "../api/profile";
 import { generateTelegramLinkToken, getTelegramStatus, unlinkTelegram } from "../api/telegram";
 import { ApiError } from "../api/client";
 import { FaceCamera } from "../components/FaceCamera";
-import { IconUser, IconWallet, IconCrown, IconAward, IconStar, IconSprout, IconLogOut, IconSun, IconMoon, IconChevronRight, IconCheckCircle } from "../components/icons/Icons";
+import { IconUser, IconCrown, IconAward, IconStar, IconSprout, IconLogOut, IconSun, IconMoon, IconChevronRight, IconCheckCircle } from "../components/icons/Icons";
 import type { Ad, User } from "../types";
 import { formatPrice } from "../lib/formatters";
 
@@ -351,20 +350,20 @@ export function ProfilePage({ user, token, microrayons = [], onLogin, onLogout, 
             </div>
             <h1 className="m3-profile-name">{user.name}</h1>
             {user.rank && (
-              <span style={{ 
-                background: user.rank === "Новичок" ? "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)" : 
-                            user.rank === "Опытный" ? "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)" : 
+              <span style={{
+                background: user.rank === "Новичок" ? "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)" :
+                            user.rank === "Опытный" ? "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)" :
                             user.rank === "Профессионал" ? "linear-gradient(135deg, #f6d365 0%, #fda085 100%)" :
                             "linear-gradient(135deg, #ff0844 0%, #ffb199 100%)",
                 color: user.rank === "Новичок" ? "#0D47A1" : user.rank === "Опытный" ? "#4A148C" : user.rank === "Профессионал" ? "#E65100" : "white",
-                padding: "4px 14px", 
-                borderRadius: "var(--md-radius-full)", 
-                fontSize: "0.85rem", 
+                padding: "4px 14px",
+                borderRadius: "var(--md-radius-full)",
+                fontSize: "0.85rem",
                 fontWeight: "bold",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                margin: "0.25rem 0 0.75rem 0"
+                margin: "0.25rem 0 0.5rem 0"
               }}>
                 {user.rank === "Мастер" ? <IconCrown size={16} /> : user.rank === "Профессионал" ? <IconAward size={16} /> : user.rank === "Опытный" ? <IconStar size={16} /> : <IconSprout size={16} />}
                 {user.rank}
@@ -372,25 +371,20 @@ export function ProfilePage({ user, token, microrayons = [], onLogin, onLogout, 
             )}
             <p className="m3-profile-email">{user.email}</p>
             <p className="m3-profile-uni">{user.university}</p>
-          </div>
-
-          {/* 2. M3 Stat Grid */}
-          <div className="m3-stat-grid">
-            <Link to="/wallet" className="m3-stat-card">
-              <div className="m3-stat-icon">
-                <IconWallet size={24} />
-              </div>
-              <span className="label">{t("nav.wallet")}</span>
-              <span className="value m3-text-primary">{user.balance || 0} ₸</span>
-            </Link>
-            
-            {(user.completedOrders !== undefined) && (
-              <div className="m3-stat-card">
-                <div className="m3-stat-icon" style={{ background: "var(--md-surface-variant)", color: "var(--md-on-surface-variant)" }}>
-                  <IconCheckCircle size={24} />
-                </div>
-                <span className="label">{t("profile.completed.orders").split(" ")[0]}</span>
-                <span className="value">{user.completedOrders}</span>
+            {user.completedOrders !== undefined && (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                marginTop: "1rem",
+                padding: "0.5rem 1.25rem",
+                background: "var(--md-surface-variant)",
+                borderRadius: "var(--md-radius-full)",
+                fontSize: "0.875rem",
+                color: "var(--md-on-surface-variant)",
+              }}>
+                <IconCheckCircle size={16} />
+                <span>{t("profile.completed.orders").split(" ")[0]}: <strong style={{ color: "var(--md-on-surface)" }}>{user.completedOrders}</strong></span>
               </div>
             )}
           </div>

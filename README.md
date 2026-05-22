@@ -1,8 +1,6 @@
 # Aqsha — Цифровая платформа занятости Мангистау
 
-> MVP для Mangystau Hackathon 2025 · [Demo →](https://aqsha.onrender.com)
-
-Aqsha решает реальную проблему: работодатели Актау публикуют вакансии в разрозненных WhatsApp-чатах, а молодёжь не знает о возможностях рядом. Мы заменяем этот хаос единой платформой с AI-матчингом и Telegram-ботом.
+Aqsha решает реальную проблему: работодатели Актау публикуют вакансии в разрозненных WhatsApp-чатах, а молодёжь не знает о возможностях рядом. Мы заменяем этот хаос единой платформой с AI-матчингом, биржей услуг и Telegram-ботом.
 
 ---
 
@@ -10,20 +8,23 @@ Aqsha решает реальную проблему: работодатели �
 
 | | |
 |---|---|
-| 🤖 **AI-матчинг** | Claude AI анализирует навыки соискателя и описание вакансии, выдаёт процент совпадения и объяснение на русском |
-| ✈️ **Telegram-бот** | Уведомления о новых вакансиях, AI-подборка `/match`, отклик в один клик прямо из Telegram |
-| 📍 **Фильтрация по Актау** | 60+ микрорайонов, тип занятости, опыт, зарплатная вилка |
-| 👤 **Полный flow** | Создание вакансии → отклик → уведомление работодателя → принять / отклонить |
-| 🔐 **FaceID / Passkey** | Вход без пароля через биометрию или ключи доступа |
+| 🤖 **AI-матчинг** | Claude AI анализирует навыки соискателя и описание вакансии, выдаёт процент совпадения и объяснение |
+| 💼 **Биржа вакансий** | Создание, фильтрация и отклики на вакансии; 60+ микрорайонов Актау |
+| 🛠 **Биржа услуг** | Фрилансеры и специалисты публикуют анкеты; клиенты создают заказы и общаются в чате |
+| 💬 **Чаты** | Встроенный чат на каждом объявлении и заказе; автоскролл, статус прочтения, онлайн-индикатор |
+| ✈️ **Telegram-бот** | Уведомления о вакансиях, AI-подборка `/match`, отклик прямо из Telegram |
+| 🔐 **FaceID / Passkey** | Вход без пароля через биометрию (WebAuthn) |
+| 🛡 **Панель администратора** | Управление объявлениями, услугами, пользователями и заказами (смена статуса, верификация) |
 
 ---
 
 ## Стек
 
-**Backend** — Node.js · Express · SQLite  
+**Backend** — Node.js · Express · SQLite (better-sqlite3)  
 **Frontend** — React 19 · TypeScript · Vite  
 **AI** — Anthropic Claude Haiku  
-**Bot** — Telegram Bot API (long-polling, без зависимостей)
+**Bot** — Telegram Bot API (long-polling)  
+**Auth** — JWT · bcrypt · WebAuthn (FaceID / Passkey)
 
 ---
 
@@ -43,12 +44,22 @@ npm run dev          # backend :3000
 npm run client:dev   # frontend :5173
 ```
 
-Демо-аккаунты создаются автоматически при первом запуске:
+### Демо-данные
 
-| Роль | Email | Пароль |
-|---|---|---|
-| Работодатель | `employer@jumys.kz` | `Demo12345` |
-| Соискатель | `seeker@jumys.kz` | `Demo12345` |
+```bash
+node seed.js   # очистит старые объявления и заполнит реалистичными данными
+```
+
+Создаёт: 6 вакансий, 6 анкет специалистов, 3 заказа, 60+ сообщений в чатах.
+
+Демо-пользователи (пароль `password123`):
+
+| Роль | Email |
+|---|---|
+| Работодатель (КМГ) | `kmg@demo.kz` |
+| Работодатель | `nursultan@demo.kz` |
+| Специалист | `alibek@demo.kz` |
+| Специалист | `dina@demo.kz` |
 
 ---
 
@@ -77,24 +88,57 @@ ADMIN_EMAILS=your@email.com
 
 ---
 
-## API
+## API (основные маршруты)
 
 ```
 GET    /api/health
-GET    /api/meta                        — категории, районы, типы занятости
+GET    /api/meta                          — категории, районы, типы занятости
+
 POST   /api/auth/register
 POST   /api/auth/login
-PATCH  /api/auth/me                     — обновить навыки, роль, район
-GET    /api/ads                         — список вакансий с фильтрами
-POST   /api/ads                         — создать вакансию
+PATCH  /api/auth/me                       — обновить навыки, роль, район
+
+GET    /api/ads                           — вакансии с фильтрами
+POST   /api/ads                           — создать вакансию
 GET    /api/ads/:id
-POST   /api/jobs/:id/apply              — откликнуться
-GET    /api/jobs/:id/applications       — отклики на вакансию (работодатель)
-GET    /api/my/applications             — мои отклики (соискатель)
-PATCH  /api/applications/:id/status     — принять / отклонить
-GET    /api/ai/match/jobs               — AI-подборка вакансий для соискателя
-GET    /api/ai/match/candidates/:jobId  — AI-подборка кандидатов для работодателя
-POST   /api/telegram/link-token         — генерация кода привязки Telegram
+POST   /api/jobs/:id/apply                — откликнуться
+PATCH  /api/applications/:id/status       — принять / отклонить
+
+GET    /api/services                      — анкеты специалистов
+POST   /api/services                      — создать анкету
+GET    /api/orders                        — мои заказы
+POST   /api/orders                        — создать заказ
+PATCH  /api/orders/:id/status             — обновить статус заказа
+
+GET    /api/ai/match/jobs                 — AI-подборка вакансий
+GET    /api/ai/match/candidates/:jobId    — AI-подборка кандидатов
+
+GET    /api/admin/orders                  — все заказы (admin)
+PATCH  /api/admin/orders/:id/status       — изменить статус заказа (admin)
+POST   /api/admin/orders/:id/approve      — одобрить завершение заказа (admin)
+PATCH  /api/admin/users/:id/verify        — верифицировать пользователя (admin)
+```
+
+---
+
+## Структура проекта
+
+```
+server/
+  routes/       auth, ads, services, orders, admin, ai, telegram, ...
+  middleware/   auth (JWT), admin, security (helmet, rate-limit)
+  db/           SQLite: init + миграции
+  lib/          notifications, badges, validators
+  telegram-bot.js
+
+client/src/
+  pages/        MarketPage, ServicesPage, OrdersPage, AdminAdsPage,
+                AdDetailsPage, ProfilePage, AiMatchPage, DialogsPage, ...
+  api/          типизированные fetch-обёртки
+  components/   AdCard, SiteLayout, Icons, FaceCamera, ...
+  i18n/         ru / kk
+
+seed.js         — скрипт демо-данных
 ```
 
 ---
@@ -109,20 +153,4 @@ POST   /api/telegram/link-token         — генерация кода прив
 
 ---
 
-## Структура проекта
-
-```
-server/
-  routes/          ai, ads, auth, applications, telegram, ...
-  middleware/       auth, security
-  db/               SQLite init + seed
-  telegram-bot.js   Telegram long-polling бот
-client/src/
-  pages/            MarketPage, AiMatchPage, ProfilePage, ...
-  api/              typed fetch-обёртки
-  components/       AdCard, SiteLayout, ...
-```
-
----
-
-Mangystau Hackathon · Апрель 2025 · Актау
+2025 · Актау

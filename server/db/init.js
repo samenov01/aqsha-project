@@ -21,12 +21,6 @@ async function initDb() {
     // Column already exists.
   }
 
-  try {
-    await run("ALTER TABLE users ADD COLUMN balance INTEGER NOT NULL DEFAULT 0");
-  } catch (_error) {
-    // Column already exists.
-  }
-
   await run(
     `CREATE TABLE IF NOT EXISTS webauthn_credentials (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,18 +145,24 @@ async function initDb() {
       service_id INTEGER NOT NULL,
       client_id INTEGER NOT NULL,
       provider_id INTEGER NOT NULL,
-      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'frozen', 'under_review', 'completed')),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'frozen', 'under_review', 'completed', 'cancelled')),
       payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK (payment_status IN ('unpaid', 'paid')),
       payment_paid_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       completed_at DATETIME,
+      commission_amount INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY(service_id) REFERENCES services(id) ON DELETE CASCADE,
       FOREIGN KEY(client_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY(provider_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `;
 
-  if (serviceOrdersInfo && !serviceOrdersInfo.sql.includes('under_review')) {
+  const needsMigration = serviceOrdersInfo && (
+    !serviceOrdersInfo.sql.includes('under_review') ||
+    !serviceOrdersInfo.sql.includes('cancelled')
+  );
+
+  if (needsMigration) {
     await run("PRAGMA foreign_keys=OFF;");
     await run(createServiceOrdersSql.replace('service_orders', 'service_orders_new'));
     await run('INSERT INTO service_orders_new SELECT * FROM service_orders');
@@ -172,18 +172,6 @@ async function initDb() {
   } else if (!serviceOrdersInfo) {
     await run(createServiceOrdersSql);
   }
-
-  await run(
-    `CREATE TABLE IF NOT EXISTS transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      amount INTEGER NOT NULL,
-      type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
-      description TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-    )`
-  );
 
   try {
     await run(

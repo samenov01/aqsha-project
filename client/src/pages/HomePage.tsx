@@ -49,9 +49,10 @@ export function HomePage({ ads }: HomePageProps) {
             <span style={{ background: "var(--md-secondary)" }} />
           </div>
           {[
-            { title: "Официант / Бармен", cat: "Кафе / Рестораны", mkt: "5 мкр", salary: "150 000 ₸", score: 92 },
-            { title: "Frontend Developer", cat: "IT / Разработка", mkt: "Центр", salary: "350 000 ₸", score: 87 },
-            { title: "Кассир в магазин", cat: "Торговля / Склад", mkt: "9 мкр", salary: "120 000 ₸", score: 74 },
+            { title: "Инженер-технолог нефти", cat: "Нефть и газ", mkt: "Центр", salary: "580 000 ₸", score: 96 },
+            { title: "Менеджер по продажам", cat: "Продажи и торговля", mkt: "8 мкр", salary: "220 000 ₸", score: 88 },
+            { title: "Повар / Шеф-повар", cat: "Рестораны и общепит", mkt: "5 мкр", salary: "180 000 ₸", score: 81 },
+            { title: "Водитель-экспедитор", cat: "Транспорт и логистика", mkt: "12 мкр", salary: "250 000 ₸", score: 75 },
           ].map((job) => (
             <div key={job.title} className="landing-job-item">
               <div>
@@ -132,6 +133,56 @@ export function HomePage({ ads }: HomePageProps) {
           </div>
         </div>
         <div className="landing-gradient" aria-hidden="true">🤖</div>
+      </section>
+
+      {/* ── Соискатели ──────────────────────────────────────────── */}
+      <section className="landing-section">
+        <h2 className="landing-section-title">Готовые специалисты Актау</h2>
+        <p className="landing-section-sub">Фрилансеры и исполнители с рейтингом и отзывами</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem", marginTop: "2rem" }}>
+          {[
+            { name: "Алибек С.", skill: "Сантехник / Электрик", mkt: "7 мкр", price: "от 5 000 ₸", rating: 4.9, orders: 34 },
+            { name: "Дина М.", skill: "Репетитор математики", mkt: "Центр", price: "3 000 ₸/час", rating: 5.0, orders: 21 },
+            { name: "Марат К.", skill: "Ремонт телефонов и ПК", mkt: "9 мкр", price: "от 2 000 ₸", rating: 4.8, orders: 57 },
+            { name: "Айгерим Б.", skill: "Дизайн и фотография", mkt: "Центр", price: "от 15 000 ₸", rating: 4.9, orders: 18 },
+          ].map((s) => (
+            <div key={s.name} style={{
+              background: "var(--md-surface)",
+              borderRadius: "var(--md-shape-xl)",
+              padding: "1.25rem",
+              boxShadow: "var(--md-elevation-1)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: "50%",
+                  background: "var(--md-primary-container)",
+                  color: "var(--md-on-primary-container)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 700, fontSize: "1.1rem",
+                }}>
+                  {s.name[0]}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>{s.name}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--md-on-surface-variant)" }}>{s.mkt}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: "0.875rem", color: "var(--md-on-surface)" }}>{s.skill}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontWeight: 600, color: "var(--md-primary)", fontSize: "0.9rem" }}>{s.price}</span>
+                <span style={{ fontSize: "0.78rem", color: "var(--md-on-surface-variant)" }}>
+                  ★ {s.rating} · {s.orders} заказов
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <Link to="/services" className="landing-btn landing-btn-light">Все специалисты →</Link>
+        </div>
       </section>
 
       {/* ── Для работодателей ────────────────────────────────────── */}

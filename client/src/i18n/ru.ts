@@ -14,7 +14,6 @@ export const ru = {
   "nav.market": "Вакансии",
   "nav.services": "Соискатели",
   "nav.orders": "Заказы",
-  "nav.wallet": "Кошелек",
   "nav.notifications": "Уведомления",
   "nav.admin": "Админ",
   "nav.profile": "Профиль",
@@ -247,18 +246,6 @@ export const ru = {
   "order.review.my_title": "Спасибо за оценку",
   "order.review.my_rating": "Оценка: {rating}",
 
-  // WalletPage
-  "wallet.auth_warning": "Пожалуйста, войдите в аккаунт.",
-  "wallet.eyebrow": "Финансы",
-  "wallet.title": "Кошелек {name}",
-  "wallet.loading": "Загрузка кошелька...",
-  "wallet.balance": "Текущий баланс",
-  "wallet.topup.label": "Сумма пополнения (Тест)",
-  "wallet.topup.placeholder": "10000",
-  "wallet.topup.btn": "Пополнить",
-  "wallet.topup.btn_loading": "Обработка...",
-  "wallet.history.title": "История транзакций",
-  "wallet.history.empty": "Транзакций пока нет",
 
   // NotificationsPage
   "notifications.auth_warning": "Чтобы видеть уведомления, войдите в аккаунт.",

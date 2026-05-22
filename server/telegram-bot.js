@@ -8,6 +8,54 @@ const { all, get, run } = require("./db/client");
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const PLATFORM_URL = (process.env.PLATFORM_URL || "https://aqsha.kz").replace(/\/$/, "");
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+const IS_LOCAL = PLATFORM_URL.includes("localhost") || PLATFORM_URL.includes("127.0.0.1");
+
+function jobButtons(jobId) {
+  const buttons = [{ text: "✅ Откликнуться", callback_data: `apply_${jobId}` }];
+  if (!IS_LOCAL) buttons.unshift({ text: "📋 Подробнее", url: `${PLATFORM_URL}/ad/${jobId}` });
+  return { reply_markup: { inline_keyboard: [buttons] } };
+}
+
+async function claudeMatch(userSkills, userMicrorayon, jobs) {
+  if (!ANTHROPIC_API_KEY) return null;
+  const jobList = jobs.map((j, i) =>
+    `${i + 1}. [ID:${j.id}] ${j.title} (${j.category}, ${j.microrayon || "Актау"}, ${j.price ? Number(j.price).toLocaleString("ru") + " ₸" : "договорная"})`
+  ).join("\n");
+
+  const prompt = `Ты — HR-ассистент платформы Aqsha (Актау, Казахстан).
+
+Навыки соискателя: ${userSkills}
+Предпочтительный район: ${userMicrorayon || "любой"}
+
+Вакансии:
+${jobList}
+
+Выбери ТОП-5 подходящих вакансий. Ответь ТОЛЬКО JSON-массивом без markdown:
+[{"id":4,"score":85,"reason":"одно предложение почему подходит"},...]`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 512,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text?.trim() || "[]";
+    return JSON.parse(text.replace(/```json?|```/g, "").trim());
+  } catch (_) {
+    return null;
+  }
+}
 
 // ─── Low-level Telegram API helpers ──────────────────────────────────────────
 
@@ -94,14 +142,7 @@ async function notifyMatchingSeekers(job) {
       await sendMessage(
         seeker.telegram_chat_id,
         `🎯 *Новая подходящая вакансия!*\n\n*${job.title}*\n💼 ${job.category}\n📍 ${job.microrayon || "Актау"}\n💰 ${salary}`,
-        {
-          reply_markup: {
-            inline_keyboard: [[
-              { text: "📋 Подробнее", url: `${PLATFORM_URL}/ad/${job.id}` },
-              { text: "✅ Откликнуться", callback_data: `apply_${job.id}` },
-            ]],
-          },
-        }
+        jobButtons(job.id)
       );
     }
   } catch (err) {
@@ -143,14 +184,7 @@ async function handleJobs(chatId) {
     await sendMessage(
       chatId,
       `*${job.title}*\n💼 ${job.category}  📍 ${job.microrayon || "Актау"}\n💰 ${salary}  ⏱ ${job.employment_type || ""}`,
-      {
-        reply_markup: {
-          inline_keyboard: [[
-            { text: "📋 Подробнее", url: `${PLATFORM_URL}/ad/${job.id}` },
-            { text: "✅ Откликнуться", callback_data: `apply_${job.id}` },
-          ]],
-        },
-      }
+      jobButtons(job.id)
     );
   }
 }
@@ -206,49 +240,68 @@ async function handleMatch(chatId) {
   }
 
   const jobs = await all(
-    `SELECT id, title, category, price, microrayon, employment_type, skills, description
+    `SELECT id, title, category, price, microrayon, employment_type, description
      FROM ads WHERE status = 'active'
-     ORDER BY created_at DESC LIMIT 50`
+     ORDER BY created_at DESC LIMIT 20`
   );
 
-  const userTokens = new Set(
-    (user.skills || "").toLowerCase().split(/[\s,]+/).filter((w) => w.length > 2)
-  );
+  if (!jobs.length) {
+    await sendMessage(chatId, `🔍 Активных вакансий пока нет.\n${PLATFORM_URL}/market`);
+    return;
+  }
 
-  const scored = jobs
-    .map((job) => {
-      const jobTokens = `${job.title} ${job.skills || ""} ${job.category}`.toLowerCase().split(/[\s,]+/).filter((w) => w.length > 2);
-      const matches = jobTokens.filter((t) => userTokens.has(t)).length;
-      const score = jobTokens.length ? Math.round((matches / jobTokens.length) * 100) : 0;
-      const locBonus = user.preferred_microrayon && job.microrayon === user.preferred_microrayon ? 20 : 0;
-      return { ...job, score: Math.min(100, score + locBonus) };
-    })
-    .filter((j) => j.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+  await sendMessage(chatId, `🤖 Анализирую вакансии для *${user.name}*...`);
+
+  let scored = [];
+
+  const aiResult = await claudeMatch(user.skills, user.preferred_microrayon, jobs);
+  if (aiResult) {
+    scored = aiResult
+      .filter((r) => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map((r) => {
+        const job = jobs.find((j) => j.id === r.id);
+        return job ? { ...job, score: r.score, reason: r.reason } : null;
+      })
+      .filter(Boolean);
+  }
+
+  // Fallback: keyword matching if AI failed or not configured
+  if (!scored.length) {
+    const userTokens = new Set(
+      (user.skills || "").toLowerCase().split(/[\s,]+/).filter((w) => w.length > 2)
+    );
+    scored = jobs
+      .map((job) => {
+        const jobTokens = `${job.title} ${job.category} ${job.description || ""}`.toLowerCase().split(/[\s,]+/).filter((w) => w.length > 2);
+        const matches = jobTokens.filter((t) => userTokens.has(t)).length;
+        const score = jobTokens.length ? Math.round((matches / Math.max(userTokens.size, 1)) * 100) : 0;
+        const locBonus = user.preferred_microrayon && job.microrayon === user.preferred_microrayon ? 15 : 0;
+        return { ...job, score: Math.min(100, score + locBonus), reason: null };
+      })
+      .filter((j) => j.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  }
 
   if (!scored.length) {
     await sendMessage(chatId,
-      `🔍 Точных совпадений не найдено.\nДобавьте больше навыков в профиле или смотрите все вакансии:\n${PLATFORM_URL}/market`
+      `🔍 Подходящих вакансий не найдено по навыкам: _${user.skills}_\n\nДобавьте больше навыков в профиле или смотрите все вакансии:\n${PLATFORM_URL}/market`
     );
     return;
   }
 
-  await sendMessage(chatId, `🤖 *AI-подборка вакансий для ${user.name}:*`);
+  await sendMessage(chatId, `✅ *Подборка готова, ${user.name}:*`);
 
   for (const job of scored) {
     const salary = job.price ? `${Number(job.price).toLocaleString("ru")} ₸/мес` : "по договорённости";
+    const reasonLine = job.reason ? `\n💡 _${job.reason}_` : "";
+    const title = job.title.replace(/[*_`[\]()]/g, "\\$&");
     await sendMessage(
       chatId,
-      `*${job.title}* — ${job.score}% совпадение\n💼 ${job.category}  📍 ${job.microrayon || "Актау"}\n💰 ${salary}`,
-      {
-        reply_markup: {
-          inline_keyboard: [[
-            { text: "📋 Подробнее", url: `${PLATFORM_URL}/ad/${job.id}` },
-            { text: "✅ Откликнуться", callback_data: `apply_${job.id}` },
-          ]],
-        },
-      }
+      `*${title}* — ${job.score}%\n💼 ${job.category}  📍 ${job.microrayon || "Актау"}\n💰 ${salary}${reasonLine}`,
+      jobButtons(job.id)
     );
   }
 }

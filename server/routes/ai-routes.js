@@ -88,31 +88,41 @@ function parseJsonArray(text) {
   }
 }
 
-async function enhanceJobMatches(userSkills, jobs) {
+async function enhanceJobMatches(userSkills, userMicrorayon, jobs) {
   if (!process.env.ANTHROPIC_API_KEY || !jobs.length) return null;
 
-  const jobsSummary = jobs.map((j, i) =>
-    `${i + 1}. ${j.title} | ${j.category} | навыки: ${j.skills || "—"}`
-  ).join("\n");
+  const jobsSummary = jobs.map((j, i) => {
+    const salary = j.price ? `${Number(j.price).toLocaleString("ru")} ₸/мес` : "договорная";
+    const desc = (j.description || "").slice(0, 120).replace(/\n/g, " ");
+    return `${i + 1}. "${j.title}" | ${j.category} | ${salary} | район: ${j.microrayon || "?"} | ${desc}`;
+  }).join("\n");
 
-  const prompt = `Ты AI-рекрутер платформы Aqsha (Казахстан). Отвечай ТОЛЬКО валидным JSON, без markdown, без пояснений.
+  const prompt = `Ты — AI-рекрутер платформы Aqsha (Актау, Казахстан).
 
-Соискатель: "${userSkills}"
+Соискатель:
+- Навыки: "${userSkills || "не указаны"}"
+- Предпочтительный район: "${userMicrorayon || "любой"}"
 
-Вакансии:
+Активные вакансии:
 ${jobsSummary}
 
-Верни JSON-массив ровно из ${jobs.length} объектов — по одному на каждую вакансию по порядку:
-[{"score":75,"reason":"Навык дизайна совпадает со сферой IT/Дизайн"},{"score":5,"reason":"Строительство не связано с профилем"}]
+Оцени каждую вакансию для этого соискателя.
 
-score: 0–100. reason: одно короткое предложение на русском.`;
+Правила оценки:
+- score 70–100: навыки хорошо совпадают с требованиями вакансии
+- score 40–69: частичное совпадение или смежная сфера
+- score 10–39: слабое совпадение, но попробовать можно
+- score 0–9: совершенно не подходит
+
+Учитывай район: если совпадает — небольшой бонус.
+
+Ответь ТОЛЬКО JSON-массивом ровно из ${jobs.length} объектов (по порядку вакансий), без markdown:
+[{"score":82,"reason":"Опыт продаж напрямую соответствует вакансии менеджера"},{"score":12,"reason":"Нефтедобыча не связана с навыками соискателя"},...]`;
 
   const text = await callClaude(prompt);
   const result = parseJsonArray(text);
   if (!result) return null;
-  // Accept if length matches exactly or is off by at most 1 (Claude sometimes skips one)
   if (Math.abs(result.length - jobs.length) > 1) return null;
-  // Pad or trim to exact length
   while (result.length < jobs.length) result.push({ score: null, reason: null });
   return result.slice(0, jobs.length);
 }
@@ -141,10 +151,10 @@ ${candidatesSummary}
   return parseJsonArray(text);
 }
 
-// Location bonus: same microrayon = 100, unset = 50 (neutral), different = 15
+// Location bonus: same microrayon = 10 pts bonus, different = 0
 function locationScore(jobMicrorayon, userMicrorayon) {
-  if (!jobMicrorayon || !userMicrorayon) return 50;
-  return jobMicrorayon === userMicrorayon ? 100 : 15;
+  if (!jobMicrorayon || !userMicrorayon) return 0;
+  return jobMicrorayon === userMicrorayon ? 10 : 0;
 }
 
 function buildDefaultReason(skills, description, experienceLevel, candidateSkills, score) {
@@ -186,42 +196,33 @@ aiRouter.get(
     const prescored = jobs.map((job) => {
       const jobText = `${job.title} ${job.category} ${job.skills} ${job.description}`;
       const skillsScore = computeMatchScore(jobText, userSkills);
-      const locScore = locationScore(job.microrayon, userMicrorayon);
-      return { ...job, _skillsScore: skillsScore, _locScore: locScore };
+      const locBonus = locationScore(job.microrayon, userMicrorayon);
+      return { ...job, _skillsScore: skillsScore + locBonus };
     });
 
-    // Step 2: pick top-10 for Claude
-    // If user has skills, try TF-IDF pre-filter; if all scores are 0, take by recency
-    const hasTfIdfSignal = prescored.some((j) => j._skillsScore > 0);
-    let top;
-    if (hasTfIdfSignal) {
-      prescored.sort((a, b) => b._skillsScore - a._skillsScore);
-      top = prescored.slice(0, 10);
-    } else {
-      // No TF-IDF signal — let Claude evaluate most recent jobs semantically
-      top = prescored.slice(0, 10); // already ordered by created_at DESC from DB
-    }
+    // Step 2: pick top-10 for Claude — always send all available jobs (max 10)
+    prescored.sort((a, b) => b._skillsScore - a._skillsScore);
+    const top = prescored.slice(0, 10);
 
-    // Step 3: Claude semantic scoring (always called if API key set)
-    const claudeResults = await enhanceJobMatches(userSkills, top);
+    // Step 3: Claude semantic scoring
+    const claudeResults = await enhanceJobMatches(userSkills, userMicrorayon, top);
     const aiPowered = Boolean(claudeResults);
 
     const matches = top.map((job, i) => {
       const claude = claudeResults?.[i];
-      const locScore = job._locScore;
 
-      let skillsFinal;
+      let finalScore;
       if (claude?.score != null) {
-        skillsFinal = claude.score;
+        // Claude score is authoritative; add small district bonus
+        const districtBonus = (userMicrorayon && job.microrayon === userMicrorayon) ? 5 : 0;
+        finalScore = Math.min(100, claude.score + districtBonus);
       } else {
-        // Fallback: TF-IDF, but give at least 20 so something shows
-        skillsFinal = Math.max(job._skillsScore, userSkills ? 20 : 0);
+        // Fallback: pure TF-IDF, no artificial inflation
+        finalScore = job._skillsScore;
       }
 
-      const finalScore = Math.min(100, Math.round(skillsFinal * 0.8 + locScore * 0.2));
-
       let reason = claude?.reason || buildDefaultReason(job.skills, job.description, job.experience_level, userSkills, job._skillsScore);
-      if (userMicrorayon && job.microrayon === userMicrorayon) {
+      if (userMicrorayon && job.microrayon === userMicrorayon && claude?.reason) {
         reason += ` Вакансия в вашем районе (${job.microrayon}).`;
       }
 
@@ -241,13 +242,16 @@ aiRouter.get(
       };
     });
 
+    // Sort by score, filter out truly irrelevant (score < 10) only if there are better options
     matches.sort((a, b) => b.matchScore - a.matchScore);
+    const hasGoodMatches = matches.some((m) => m.matchScore >= 30);
+    const filtered = hasGoodMatches ? matches.filter((m) => m.matchScore >= 10) : matches;
 
     res.json({
       userSkills,
       userMicrorayon,
       aiPowered,
-      matches,
+      matches: filtered,
     });
   })
 );
